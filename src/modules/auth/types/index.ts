@@ -1,0 +1,1 @@
+export { type UserLoginType } from './user.type';
