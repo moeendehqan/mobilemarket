@@ -55,7 +55,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
         {
             id: 6,
             name: 'درباره ما',
-            path: '/about',
+            path: '/',
             icon: <BiInfoCircle />,
             children: null,
             is_active: true
@@ -63,7 +63,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
         {
             id: 7,
             name: 'تماس با ما',
-            path: '/contact',
+            path: '/',
             icon: <BiPhone />,
             children: null,
             is_active: true
@@ -107,7 +107,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
                     </div>
 
                     <nav className="space-y-2">
-                        {data.map((item) => (
+                        {data.filter(item => item.is_active).map((item) => (
                             <a
                                 key={item.id}
                                 href={item.path}

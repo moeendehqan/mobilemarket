@@ -11,7 +11,6 @@ const registerSchema = z.object({
     first_name: z.string().min(2, 'نام باید حداقل 2 حرف باشد'),
     last_name: z.string().min(2, 'نام خانوادگی باید حداقل 2 حرف باشد'),
     email: z.string().email('ایمیل نامعتبر است').optional(),
-    mobile: z.string().regex(/^09\d{9}$/, 'شماره موبایل نامعتبر است'),
     address: z.string().optional(),
     city: z.string().optional(),
     company: z.string().min(2, 'نام فروشگاه باید حداقل 2 حرف باشد'),
@@ -89,17 +88,6 @@ const RegisterForm = () => {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                     {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">شماره موبایل *</label>
-                    <input
-                        type="tel"
-                        {...register('mobile')}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="09123456789"
-                    />
-                    {errors.mobile && <p className="mt-1 text-sm text-red-600">{errors.mobile.message}</p>}
                 </div>
 
                 <div>

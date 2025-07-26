@@ -55,7 +55,7 @@ interface FormDataType {
   size: string;
   charger: boolean;
   carton: boolean;
-  type_product: string;
+  type_product?: "new" | "as new" | "used" | null;
   technical_problem: string;
   hit_product: boolean;
   register_date: string;
@@ -102,7 +102,7 @@ const ProductForm: React.FC = () => {
     size: "",
     charger: false,
     carton: false,
-    type_product: "",
+    type_product: null,
     technical_problem: "",
     hit_product: false,
     register_date: "",
@@ -177,7 +177,7 @@ const ProductForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("لطفا همه فیلدهای الزامی را پر کنید");
       return;
@@ -264,7 +264,7 @@ const ProductForm: React.FC = () => {
           </div>
           <p className="text-gray-600 font-medium">اطلاعات کامل محصول را وارد کنید</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <LabelInput label="نام محصول" required error={errors.name}>
@@ -343,6 +343,19 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
 
+            <LabelInput label="نوع محصول">
+              <select
+                name="type_product"
+                value={formData.type_product || ""}
+                onChange={handleChange}
+                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+              >
+                <option value="">انتخاب کنید</option>
+                <option value="new">نو</option>
+                <option value="as new">در حد نو</option>
+                <option value="used">کارکرده</option>
+              </select>
+            </LabelInput>
             <LabelInput label="تعداد سیم کارت" error={errors.sim_card}>
               <select
                 name="sim_card"

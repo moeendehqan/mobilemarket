@@ -348,7 +348,7 @@ const DetailProductPage = () => {
                   <div key={picture.id} className="bg-gradient-to-br from-gray-50 to-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100">
                     <div className="relative group">
                       <img 
-                        src={"http://localhost:8000"+picture.file} 
+                        src={"https://shikala.com"+picture.file} 
                         alt={picture.name || `تصویر محصول ${index + 1}`}
                         className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
