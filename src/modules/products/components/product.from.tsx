@@ -3,6 +3,7 @@ import useAddProduct from "../hooks/useAddProduct";
 import useAddCamera from "../hooks/useAddCamera";
 import useAddPicture from "../hooks/addPicture";
 import { toast } from "react-hot-toast";
+import useModelMobile from "../hooks/useModelMobile";
 
 interface NewCamera {
   name: string;

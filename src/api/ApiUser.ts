@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 import { toast } from "react-toastify";
 
 const ApiUser = axios.create({
-    baseURL: 'https://api.shikala.com',
+    baseURL: 'http://127.0.0.1:8000',
     headers: {
         'Content-Type': 'application/json',
     },

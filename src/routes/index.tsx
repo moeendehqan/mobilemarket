@@ -10,7 +10,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: '',
+        path: 'stats',
         element: <StatisticPage />
       },
       {
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
         element: <CustomerDetailPage />
       },
       {
-        path: 'products',
+        path: '',
         element: <ProductPage />
       },
       {

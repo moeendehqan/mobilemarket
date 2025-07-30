@@ -14,10 +14,10 @@ const registerSchema = z.object({
     address: z.string().optional(),
     city: z.string().optional(),
     company: z.string().min(2, 'نام فروشگاه باید حداقل 2 حرف باشد'),
-    sheba_number: z.string().regex(/^IR[0-9]{24}$/, 'شماره شبا باید با IR شروع شود و 24 رقم باشد'),
-    card_number: z.string().regex(/^[0-9]{16}$/, 'شماره کارت باید 16 رقم باشد'),
+    sheba_number: z.string().optional(),
+    card_number: z.string().optional(),
     account_number: z.string().optional(),
-    account_bank: z.string().min(2, 'نام بانک باید حداقل 2 حرف باشد')
+    account_bank: z.string().optional()
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -121,7 +121,7 @@ const RegisterForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">شماره شبا *</label>
+                    <label className="block text-sm font-medium text-gray-700">شماره شبا</label>
                     <input
                         type="text"
                         {...register('sheba_number')}
@@ -133,7 +133,7 @@ const RegisterForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">شماره کارت *</label>
+                    <label className="block text-sm font-medium text-gray-700">شماره کارت</label>
                     <input
                         type="text"
                         {...register('card_number')}
@@ -156,7 +156,7 @@ const RegisterForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">بانک *</label>
+                    <label className="block text-sm font-medium text-gray-700">بانک</label>
                     <input
                         type="text"
                         {...register('account_bank')}
