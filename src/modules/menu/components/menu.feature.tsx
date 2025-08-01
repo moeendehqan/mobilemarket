@@ -21,17 +21,9 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
             is_active: true
         },
         {
-            id: 2,
-            name: 'کاربران',
-            path: '/customers',
-            icon: <BiUser />,
-            children: null,
-            is_active: permissionsCheck(['can_see_all_users'])
-        },
-        {
             id: 3,
             name: 'محصولات',
-            path: '/products',
+            path: '/',
             icon: <BiPackage />,
             children: null,
             is_active: true
@@ -41,14 +33,6 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
             name: 'سفارشات',
             path: '/orders',
             icon: <BiCart />,
-            children: null,
-            is_active: true
-        },
-        {
-            id: 5,
-            name: 'تنظیمات',
-            path: '/settings',
-            icon: <BiCog />,
             children: null,
             is_active: true
         },

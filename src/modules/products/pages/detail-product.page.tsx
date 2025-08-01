@@ -121,10 +121,12 @@ const DetailProductPage = () => {
                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                   <span className="text-gray-600 font-medium">رنگ:</span>
                   <div className="flex items-center gap-2">
-                    {product.color && product.color.startsWith('#') && (
+                    {product.color && typeof product.color === 'string' && product.color.startsWith('#') && (
                       <div className="w-4 h-4 rounded-full border border-gray-300" style={{backgroundColor: product.color}}></div>
                     )}
-                    <span className="font-semibold text-gray-800">{product.color || '-'}</span>
+                    <span className="font-semibold text-gray-800">
+                      {typeof product.color === 'object' && product.color?.name ? product.color.name : product.color || '-'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">

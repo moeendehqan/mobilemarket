@@ -1,69 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import useAddProduct from "../hooks/useAddProduct";
-import useAddCamera from "../hooks/useAddCamera";
 import useAddPicture from "../hooks/addPicture";
 import { toast } from "react-hot-toast";
 import useModelMobile from "../hooks/useModelMobile";
+import type { modelMobileType } from "../types/modelmobile.type";
+import type { Color } from "../types/color.type";
 
-interface NewCamera {
-  name: string;
-  resolution: string;
-  description: string;
-}
-
-const MOBILE_BRANDS = [
-  "Samsung",
-  "Apple",
-  "Xiaomi",
-  "Huawei",
-  "OnePlus",
-  "Sony",
-  "LG",
-  "Nokia",
-  "Motorola",
-  "Google",
-  "ASUS",
-  "Lenovo",
-  "HP",
-  "Dell",
-  "Acer",
-  "MSI",
+const STATUS_OPTIONS = [
+  { value: "open", label: "باز" },
+  { value: "saled", label: "فروخته شده" },
+  { value: "canseled", label: "لغو شده" },
+  { value: "reserved", label: "رزرو شده" },
 ];
 
-const DEVICE_COLORS = [
-  { name: "مشکی", value: "#000000" },
-  { name: "سفید", value: "#FFFFFF" },
-  { name: "طلایی", value: "#FFD700" },
-  { name: "نقره‌ای", value: "#C0C0C0" },
-  { name: "خاکستری", value: "#808080" },
-  { name: "آبی", value: "#0000FF" },
-  { name: "قرمز", value: "#FF0000" },
-  { name: "صورتی", value: "#FFC0CB" },
+const CARTON_OPTIONS = [
+  { value: "orginal", label: "اصلی" },
+  { value: "repakage", label: "بسته‌بندی مجدد" },
 ];
 
 interface FormDataType {
-  name: string;
   description: string;
-  price: string;
-  brand: string;
-  color: string;
-  part_number: string;
-  ram: string;
-  sim_card: string;
-  battery: string;
-  battery_health: string;
-  battery_changed: boolean;
-  size: string;
-  charger: boolean;
-  carton: boolean;
-  type_product?: "new" | "as new" | "used" | null;
+  description_appearance: string;
   technical_problem: string;
-  hit_product: boolean;
-  register_date: string;
-  registered: boolean;
+  price: string;
+  color: number | null;
+  battry_health: string;
+  battry_change: boolean;
+  type_product?: "new" | "as new" | "used" | null;
+  auction: boolean;
   guarantor: string;
   repaired: boolean;
+  part_num: string;
   status_product: string;
+  carton: string;
+  model_mobile: number | null;
   pictures: File[];
 }
 
@@ -89,56 +59,64 @@ const LabelInput: React.FC<{
 
 const ProductForm: React.FC = () => {
   const [formData, setFormData] = useState<FormDataType>({
-    name: "",
     description: "",
-    price: "",
-    brand: "",
-    color: "",
-    part_number: "",
-    ram: "",
-    sim_card: "",
-    battery: "",
-    battery_health: "",
-    battery_changed: false,
-    size: "",
-    charger: false,
-    carton: false,
-    type_product: null,
+    description_appearance: "",
     technical_problem: "",
-    hit_product: false,
-    register_date: "",
-    registered: false,
+    price: "",
+    color: null,
+    battry_health: "",
+    battry_change: false,
+    type_product: null,
+    auction: false,
     guarantor: "",
     repaired: false,
-    status_product: "",
+    part_num: "",
+    status_product: "open",
+    carton: "",
+    model_mobile: null,
     pictures: [],
   });
 
   const { mutateAsync: mutateProduct, isPending: isPendingProduct } = useAddProduct();
-  const { mutateAsync: mutateCamera, isPending: isPendingCamera } = useAddCamera();
   const { mutateAsync: mutatePicture, isPending: isPendingPicture } = useAddPicture();
+  const { data: modelMobiles, isLoading: isLoadingModels } = useModelMobile();
 
-  const [newCameras, setNewCameras] = useState<NewCamera[]>([
-    { name: "", resolution: "", description: "" },
-  ]);
+  const [selectedModel, setSelectedModel] = useState<modelMobileType | null>(null);
+  const [availableColors, setAvailableColors] = useState<Color[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const [errors, setErrors] = useState<Partial<FormDataType>>({});
 
   const validateForm = () => {
     const newErrors: Partial<FormDataType> = {};
-    if (!formData.name) newErrors.name = "نام محصول الزامی است";
+    if (!formData.description) newErrors.description = "توضیحات الزامی است";
     if (!formData.price) {
       newErrors.price = "قیمت الزامی است";
     } else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) {
       newErrors.price = "قیمت باید عدد مثبت باشد";
     }
-    if (!formData.brand) newErrors.brand = "برند الزامی است";
-    if (!formData.color) newErrors.color = "رنگ الزامی است";
-    if (formData.ram && !/^\d+$/.test(formData.ram)) {
-      newErrors.ram = "مقدار رم باید عدد باشد";
+    if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
+    if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
+    if (formData.battry_health && (!/^\d+$/.test(formData.battry_health) || parseInt(formData.battry_health) < 0 || parseInt(formData.battry_health) > 100)) {
+      newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
     }
-    if (formData.sim_card && !/^[1-2]$/.test(formData.sim_card)) {
-      newErrors.sim_card = "تعداد سیم‌کارت باید 1 یا 2 باشد";
+    if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) {
+      newErrors.guarantor = "ضامن باید عدد باشد";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -150,9 +128,16 @@ const ProductForm: React.FC = () => {
     if (type === "file" && files) {
       setFormData(prev => ({ ...prev, pictures: Array.from(files) }));
     } else {
+      let processedValue: any = value;
+      if (name === "color" || name === "model_mobile" || name === "guarantor") {
+        processedValue = value ? parseInt(value) : null;
+      } else if (name === "battry_health") {
+        processedValue = value ? parseInt(value) : "";
+      }
+      
       setFormData(prev => ({
         ...prev,
-        [name]: type === "checkbox" ? checked : value,
+        [name]: type === "checkbox" ? checked : processedValue,
       }));
     }
     if (errors[name as keyof FormDataType]) {
@@ -160,21 +145,39 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  const handleCameraChange = (index: number, field: keyof NewCamera, value: string) => {
-    setNewCameras(prev => {
-      const updated = [...prev];
-      updated[index][field] = value;
-      return updated;
-    });
+  const handleModelSelect = (model: modelMobileType) => {
+    setSelectedModel(model);
+    setAvailableColors(model.colors || []);
+    setSearchTerm(`${model.model_name} - ${model.brand}`);
+    setShowDropdown(false);
+    setFormData(prev => ({ 
+      ...prev, 
+      model_mobile: model.id,
+      color: null,
+      part_num: model.is_apple ? (model.part_number || '') : '',
+      battry_health: model.is_apple ? prev.battry_health : '85',
+      carton: model.is_apple ? prev.carton : 'orginal'
+    }));
+    if (errors.model_mobile) {
+      setErrors(prev => ({ ...prev, model_mobile: undefined }));
+    }
   };
 
-  const addNewCamera = () => {
-    setNewCameras(prev => [...prev, { name: "", resolution: "", description: "" }]);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setShowDropdown(value.length > 0);
+    if (value === '') {
+      setSelectedModel(null);
+      setAvailableColors([]);
+      setFormData(prev => ({ ...prev, model_mobile: null, color: null, part_num: '' }));
+    }
   };
 
-  const removeCamera = (index: number) => {
-    setNewCameras(prev => prev.filter((_, i) => i !== index));
-  };
+  const filteredModels = modelMobiles?.filter(model => 
+    model.model_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    model.brand.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,45 +206,46 @@ const ProductForm: React.FC = () => {
         }
       }
 
-      const createdCameraIds: number[] = [];
-      for (const cam of newCameras) {
-        if (cam.name && cam.resolution) {
-          try {
-            const response = await mutateCamera(cam);
-            if (response && response.id) {
-              createdCameraIds.push(response.id);
-            } else {
-              toast.error(`خطا در ثبت دوربین ${cam.name}`);
-            }
-          } catch (error) {
-            console.error(`خطا در ثبت دوربین ${cam.name}:`, error);
-            toast.error(`خطا در ثبت دوربین ${cam.name}`);
-          }
-        }
-      }
-
       if (pictureIds.length === 0 && formData.pictures.length > 0) {
         toast.error("خطا در آپلود تصاویر");
-        return;
-      }
-
-      if (createdCameraIds.length === 0 && newCameras.some(cam => cam.name && cam.resolution)) {
-        toast.error("خطا در ثبت دوربین‌ها");
         return;
       }
 
       const payload = {
         ...formData,
         price: parseInt(formData.price),
-        ram: formData.ram ? parseInt(formData.ram) : undefined,
-        sim_card: formData.sim_card ? parseInt(formData.sim_card) : undefined,
+        battry_health: formData.battry_health ? parseInt(formData.battry_health) : 0,
+        guarantor: formData.guarantor ? parseInt(formData.guarantor) : 0,
         picture: pictureIds,
-        camera: createdCameraIds,
       };
 
       const response = await mutateProduct(payload);
       if (response) {
         toast.success("محصول با موفقیت ایجاد شد");
+        // Reset form
+        setFormData({
+          description: "",
+          description_appearance: "",
+          technical_problem: "",
+          price: "",
+          color: null,
+          battry_health: "",
+          battry_change: false,
+          type_product: null,
+          auction: false,
+          guarantor: "",
+          repaired: false,
+          part_num: "",
+          status_product: "open",
+          carton: "",
+          model_mobile: null,
+          pictures: [],
+        });
+        setSelectedModel(null);
+        setAvailableColors([]);
+        setSearchTerm("");
+        setShowDropdown(false);
+        setErrors({});
       } else {
         toast.error("خطا در ایجاد محصول");
       }
@@ -251,7 +255,7 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  const isSubmitting = isPendingProduct || isPendingCamera || isPendingPicture;
+  const isSubmitting = isPendingProduct || isPendingPicture;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
@@ -267,17 +271,85 @@ const ProductForm: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
+          {/* انتخاب مدل موبایل */}
+          <div className="mb-8">
+            <LabelInput label="انتخاب مدل موبایل" required error={errors.model_mobile}>
+              <div className="relative" ref={dropdownRef}>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setShowDropdown(searchTerm.length > 0)}
+                  placeholder="جستجو مدل موبایل..."
+                  className={`w-full border-2 ${errors.model_mobile ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                  disabled={isLoadingModels}
+                />
+                
+                {isLoadingModels && (
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                  </div>
+                )}
+                
+                {showDropdown && !isLoadingModels && filteredModels.length > 0 && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl max-h-60 overflow-y-auto">
+                    {filteredModels.map((model) => (
+                      <div
+                        key={model.id}
+                        onClick={() => handleModelSelect(model)}
+                        className="p-4 hover:bg-blue-50 cursor-pointer transition-all duration-200 border-b border-gray-100 last:border-b-0 flex items-center gap-4"
+                      >
+                        {model.pictures && model.pictures.length > 0 && (
+                          <img
+                            src={model.pictures[0].file}
+                            alt={model.model_name}
+                            className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 text-right">
+                          <div className="text-sm font-bold text-gray-800">{model.model_name}</div>
+                          <div className="text-xs text-gray-600">{model.brand}</div>
+                          <div className="text-xs text-gray-500 mt-1">{model.part_number}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {showDropdown && !isLoadingModels && filteredModels.length === 0 && searchTerm.length > 0 && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl p-4 text-center text-gray-500">
+                    مدلی با این نام پیدا نشد
+                  </div>
+                )}
+              </div>
+            </LabelInput>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <LabelInput label="نام محصول" required error={errors.name}>
-              <input
-                name="name"
-                value={formData.name}
+            <LabelInput label="توضیحات" required error={errors.description}>
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                placeholder="نام محصول را وارد کنید..."
-                className={`w-full border-2 ${errors.name ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                rows={4}
+                placeholder="توضیحات محصول را وارد کنید..."
+                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
               />
             </LabelInput>
 
+            <LabelInput label="توضیحات ظاهری">
+              <textarea
+                name="description_appearance"
+                value={formData.description_appearance}
+                onChange={handleChange}
+                rows={4}
+                placeholder="توضیحات ظاهری محصول را وارد کنید..."
+                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
+              />
+            </LabelInput>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <LabelInput label="قیمت" required error={errors.price}>
               <input
                 type="number"
@@ -290,59 +362,53 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
 
-            <LabelInput label="برند" required error={errors.brand}>
-              <select
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                className={`w-full border-2 ${errors.brand ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-              >
-                <option value="">انتخاب کنید</option>
-                {MOBILE_BRANDS.map(brand => (
-                  <option key={brand} value={brand}>{brand}</option>
-                ))}
-              </select>
-            </LabelInput>
-
             <LabelInput label="رنگ" required error={errors.color}>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {DEVICE_COLORS.map(({ name, value }) => (
-                  <label
-                    key={value}
-                    className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${formData.color === value ? 'ring-4 ring-blue-400 ring-opacity-30 border-blue-400 bg-blue-50/50 shadow-lg' : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-white to-blue-50/20 hover:shadow-lg'}`}
-                  >
-                    <input
-                      type="radio"
-                      name="color"
-                      value={value}
-                      checked={formData.color === value}
-                      onChange={handleChange}
-                      className="hidden"
-                    />
-                    <span
-                      className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-md"
-                      style={{ backgroundColor: value }}
-                    />
-                    <span className="text-sm font-medium">{name}</span>
-                  </label>
-                ))}
-              </div>
+              {availableColors.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {availableColors.map((color) => (
+                    <label
+                      key={color.id}
+                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${formData.color === color.id ? 'ring-4 ring-blue-400 ring-opacity-30 border-blue-400 bg-blue-50/50 shadow-lg' : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-white to-blue-50/20 hover:shadow-lg'}`}
+                    >
+                      <input
+                        type="radio"
+                        name="color"
+                        value={color.id}
+                        checked={formData.color === color.id}
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                      <span
+                        className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-md"
+                        style={{ backgroundColor: color.hex_code }}
+                      />
+                      <span className="text-sm font-medium">{color.name}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center py-4">
+                  {selectedModel ? 'رنگی برای این مدل موجود نیست' : 'ابتدا مدل موبایل را انتخاب کنید'}
+                </div>
+              )}
             </LabelInput>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <LabelInput label="رم" error={errors.ram}>
-              <input
-                type="number"
-                name="ram"
-                min="1"
-                max="32"
-                value={formData.ram}
-                onChange={handleChange}
-                placeholder="مقدار رم به GB"
-                className={`w-full border-2 ${errors.ram ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-              />
-            </LabelInput>
+            {selectedModel?.is_apple && (
+              <LabelInput label="سلامت باتری (درصد)" error={errors.battry_health}>
+                <input
+                  type="number"
+                  name="battry_health"
+                  min="0"
+                  max="100"
+                  value={formData.battry_health}
+                  onChange={handleChange}
+                  placeholder="سلامت باتری به درصد"
+                  className={`w-full border-2 ${errors.battry_health ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                />
+              </LabelInput>
+            )}
 
             <LabelInput label="نوع محصول">
               <select
@@ -357,43 +423,53 @@ const ProductForm: React.FC = () => {
                 <option value="used">کارکرده</option>
               </select>
             </LabelInput>
-            <LabelInput label="تعداد سیم کارت" error={errors.sim_card}>
-              <select
-                name="sim_card"
-                value={formData.sim_card}
-                onChange={handleChange}
-                className={`w-full border-2 ${errors.sim_card ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-              >
-                <option value="">انتخاب کنید</option>
-                <option value="1">تک سیم‌کارت</option>
-                <option value="2">دو سیم‌کارت</option>
-              </select>
-            </LabelInput>
 
-            <LabelInput label="تاریخ رجیستری">
+            <LabelInput label="مدت ضمانت به ماه" error={errors.guarantor}>
               <input
-                type="date"
-                name="register_date"
-                value={formData.register_date}
+                type="number"
+                name="guarantor"
+                min="0"
+                value={formData.guarantor}
                 onChange={handleChange}
-                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+                placeholder="مدت ضمانت به ماه"
+                className={`w-full border-2 ${errors.guarantor ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
               />
             </LabelInput>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <LabelInput label="توضیحات">
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                placeholder="توضیحات محصول را وارد کنید..."
-                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
-              />
-            </LabelInput>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {selectedModel?.is_apple && (
+              <LabelInput label="نوع جعبه">
+                <select
+                  name="carton"
+                  value={formData.carton}
+                  onChange={handleChange}
+                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+                >
+                  <option value="">انتخاب کنید</option>
+                  {CARTON_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </LabelInput>
+            )}
 
-            <LabelInput label="مشکل فنی">
+            {selectedModel?.is_apple && (
+              <LabelInput label="پارت نامبر">
+                 <input
+                   type="text"
+                   name="part_num"
+                   value={formData.part_num}
+                   onChange={handleChange}
+                   placeholder="پارت نامبر"
+                   className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+                 />
+               </LabelInput>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <LabelInput label="مشکلات فنی">
               <textarea
                 name="technical_problem"
                 value={formData.technical_problem}
@@ -403,100 +479,76 @@ const ProductForm: React.FC = () => {
                 className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
               />
             </LabelInput>
-          </div>
 
-          <div className="mb-8">
             <LabelInput label="تصاویر محصول">
-              <div className="relative">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 rounded-2xl px-5 py-3.5 transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm file:mr-4 file:py-2 file:px-6 file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-blue-500 file:to-purple-500 file:text-white file:rounded-xl hover:file:from-blue-600 hover:file:to-purple-600 file:transition-all file:duration-300 file:shadow-lg"
-                />
-                <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
-                  <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                  فرمت‌های مجاز: JPG, PNG, GIF
+              <input
+                type="file"
+                name="pictures"
+                multiple
+                accept="image/*"
+                onChange={handleChange}
+                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {formData.pictures.length > 0 && (
+                <div className="mt-3 text-sm text-gray-600">
+                  {formData.pictures.length} فایل انتخاب شده
                 </div>
-              </div>
+              )}
             </LabelInput>
           </div>
 
-          <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-3xl p-6 sm:p-8 border-2 border-gray-100 mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">📷</span>
-                </div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">دوربین‌ها</h3>
-              </div>
-              <button
-                type="button"
-                onClick={addNewCamera}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-2xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
-              >
-                <span className="text-lg">+</span>
-                افزودن دوربین جدید
-              </button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+              <input
+                type="checkbox"
+                name="battry_change"
+                checked={formData.battry_change}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label className="text-sm font-medium text-gray-800">باتری تعویض شده</label>
             </div>
 
-            <div className="space-y-6">
-              {newCameras.map((cam, idx) => (
-                <div key={idx} className="bg-white/80 backdrop-blur-xl shadow-xl rounded-2xl p-6 border border-white/50">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <input
-                      type="text"
-                      value={cam.name}
-                      onChange={(e) => handleCameraChange(idx, "name", e.target.value)}
-                      placeholder="نام دوربین"
-                      className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
-                    />
-                    <input
-                      type="text"
-                      value={cam.resolution}
-                      onChange={(e) => handleCameraChange(idx, "resolution", e.target.value)}
-                      placeholder="رزولوشن (مثال: 12MP)"
-                      className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
-                    />
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        value={cam.description}
-                        onChange={(e) => handleCameraChange(idx, "description", e.target.value)}
-                        placeholder="توضیحات"
-                        className="flex-1 border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeCamera(idx)}
-                        className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+              <input
+                type="checkbox"
+                name="auction"
+                checked={formData.auction}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label className="text-sm font-medium text-gray-800">حراجی</label>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+              <input
+                type="checkbox"
+                name="repaired"
+                checked={formData.repaired}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
             </div>
           </div>
 
-          <div className="pt-8 border-t-2 border-gray-100">
+          <div className="flex justify-center pt-6">
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full ${isSubmitting ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-105'} text-white py-4 sm:py-5 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 font-bold text-lg shadow-2xl hover:shadow-3xl`}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-12 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-3 text-lg"
             >
-              {isSubmitting && (
-                <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                  در حال پردازش...
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">✨</span>
+                  ایجاد محصول
+                </>
               )}
-              <span className="w-2 h-2 bg-white rounded-full"></span>
-              {isSubmitting ? "در حال ایجاد محصول..." : "ایجاد محصول"}
             </button>
           </div>
         </form>
