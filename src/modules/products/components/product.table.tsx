@@ -122,7 +122,6 @@ const ProductTable = () => {
             >
               <option value="">همه انواع</option>
               <option value="new">نو</option>
-              <option value="as new">در حد نو</option>
               <option value="used">کارکرده</option>
             </select>
           </div>

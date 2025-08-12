@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -5,7 +6,7 @@ import useRegister from '../Hooks/useRegister';
 import type { UserType } from '../types/user.type';
 import { useNavigate } from 'react-router-dom';
 import useUser from '../Hooks/useUser';
-
+import { City } from './city';
 const registerSchema = z.object({
     uniqidentifier: z.string().min(10, 'کد ملی باید 10 رقم باشد').max(10, 'کد ملی باید 10 رقم باشد'),
     first_name: z.string().min(2, 'نام باید حداقل 2 حرف باشد'),
@@ -23,10 +24,22 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const RegisterForm = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema)
     });
     const navigate = useNavigate();
+    const [citySearch, setCitySearch] = useState('');
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+    const [filteredCities, setFilteredCities] = useState(City());
+    
+    const watchedCity = watch('city');
+    
+    // Initialize citySearch with existing city value
+    useEffect(() => {
+        if (watchedCity && !citySearch) {
+            setCitySearch(watchedCity);
+        }
+    }, [watchedCity, citySearch]);
 
     const { data: user } = useUser();
 
@@ -44,6 +57,23 @@ const RegisterForm = () => {
 
     const onSubmit = (data: UserType) => {
         mutate(data);
+    };
+
+    const handleCitySearch = (value: string) => {
+        setCitySearch(value);
+        const filtered = City().filter(city => 
+            city.name.toLowerCase().includes(value.toLowerCase()) ||
+            city.ostan.toLowerCase().includes(value.toLowerCase()) ||
+            city.full_name.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredCities(filtered);
+        setShowCityDropdown(value.length > 0 && filtered.length > 0);
+    };
+
+    const handleCitySelect = (city: any) => {
+        setCitySearch(city.full_name);
+        setValue('city', city.full_name);
+        setShowCityDropdown(false);
     };
 
     return (
@@ -100,13 +130,31 @@ const RegisterForm = () => {
                     {errors.company && <p className="mt-1 text-sm text-red-600">{errors.company.message}</p>}
                 </div>
 
-                <div>
+                <div className="relative">
                     <label className="block text-sm font-medium text-gray-700">شهر</label>
                     <input
                         type="text"
-                        {...register('city')}
+                        value={citySearch}
+                        onChange={(e) => handleCitySearch(e.target.value)}
+                        onFocus={() => setShowCityDropdown(citySearch.length > 0 && filteredCities.length > 0)}
+                        onBlur={() => setTimeout(() => setShowCityDropdown(false), 200)}
+                        placeholder="جستجوی شهر..."
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
+                    {showCityDropdown && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            {filteredCities.slice(0, 10).map((city) => (
+                                <div
+                                    key={city.id}
+                                    onClick={() => handleCitySelect(city)}
+                                    className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                                >
+                                    <div className="font-medium">{city.name}</div>
+                                    <div className="text-gray-500 text-xs">{city.ostan}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>}
                 </div>
 
