@@ -6,6 +6,7 @@ import useModelMobile from "../hooks/useModelMobile";
 import type { modelMobileType } from "../types/modelmobile.type";
 import type { Color } from "../types/color.type";
 import { usePartNumber } from "../hooks/usePartNumber";
+
 const STATUS_OPTIONS = [
   { value: "open", label: "باز" },
   { value: "saled", label: "فروخته شده" },
@@ -94,12 +95,17 @@ const ProductForm: React.FC = () => {
   const [availableColors, setAvailableColors] = useState<Color[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [showColorDropdown, setShowColorDropdown] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const colorDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
+      }
+      if (colorDropdownRef.current && !colorDropdownRef.current.contains(event.target as Node)) {
+        setShowColorDropdown(false);
       }
     };
 
@@ -149,15 +155,11 @@ const ProductForm: React.FC = () => {
         setFormData(prev => ({
           ...prev,
           [name]: processedValue,
-          // اگر grade برابر D نیست، مقدار technical_problem را خالی کنیم
           technical_problem: processedValue === "D" ? prev.technical_problem : "",
-          // اگر grade برابر A است، مقدار description_appearance را خالی کنیم
           description_appearance: processedValue === "A" ? "" : prev.description_appearance,
-          // مقدار description را خالی کنیم
           description: ""
         }));
       } else if (name === "type_product") {
-        // اگر نوع محصول "نو" باشد، grade را به A تنظیم کنیم و باتری تعویض شده و تعمیر شده را false کنیم و سلامت باتری را 100 کنیم
         if (processedValue === "new") {
           setFormData(prev => ({
             ...prev,
@@ -200,6 +202,14 @@ const ProductForm: React.FC = () => {
     }));
     if (errors.model_mobile) {
       setErrors(prev => ({ ...prev, model_mobile: undefined }));
+    }
+  };
+
+  const handleColorSelect = (colorId: number) => {
+    setFormData(prev => ({ ...prev, color: colorId }));
+    setShowColorDropdown(false);
+    if (errors.color) {
+      setErrors(prev => ({ ...prev, color: undefined }));
     }
   };
 
@@ -251,7 +261,6 @@ const ProductForm: React.FC = () => {
         return;
       }
 
-      // Create base payload
       const payload: any = {
         ...formData,
         price: parseInt(formData.price),
@@ -261,11 +270,9 @@ const ProductForm: React.FC = () => {
           id: formData.model_mobile,
           picture: []
         },
-        // Send color as a primary key value, not as an object
         color: formData.color,
       };
       
-      // Only add picture field if there are pictures
       if (pictureIds.length > 0) {
         payload.picture = pictureIds.map(id => ({ id }));
       }
@@ -273,7 +280,6 @@ const ProductForm: React.FC = () => {
       const response = await mutateProduct(payload);
       if (response) {
         toast.success("محصول با موفقیت ایجاد شد");
-        // Reset form
         setFormData({
           description: "",
           description_appearance: "",
@@ -378,91 +384,111 @@ const ProductForm: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {!formData.grade && (
-              <LabelInput label="توضیحات" required error={errors.description}>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="توضیحات محصول را وارد کنید..."
-                  className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
-                />
-              </LabelInput>
-            )}
-
-            {formData.grade !== "A" && (
-              <LabelInput label="توضیحات ظاهری">
-                <textarea
-                  name="description_appearance"
-                  value={formData.description_appearance}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="توضیحات ظاهری محصول را وارد کنید..."
-                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
-                />
-              </LabelInput>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <LabelInput label={formData.auction?"قیمت پایه":"قیمت"} required error={errors.price}>
-              <input
-                type="number"
-                name="price"
-                min="1"
-                value={formData.price}
+            <LabelInput label="توضیحات" required error={errors.description}>
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                placeholder="قیمت به تومان..."
-                className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                rows={4}
+                placeholder="توضیحات محصول را وارد کنید..."
+                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
               />
             </LabelInput>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <LabelInput label="رنگ" required error={errors.color}>
-              {availableColors.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {availableColors.map((color) => (
-                    <label
-                      key={color.id}
-                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${formData.color === color.id ? 'ring-4 ring-blue-400 ring-opacity-30 border-blue-400 bg-blue-50/50 shadow-lg' : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-white to-blue-50/20 hover:shadow-lg'}`}
-                    >
-                      <input
-                        type="radio"
-                        name="color"
-                        value={color.id}
-                        checked={formData.color === color.id}
-                        onChange={handleChange}
-                        className="hidden"
-                      />
+              <div className="relative" ref={colorDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowColorDropdown(!showColorDropdown)}
+                  className={`w-full border-2 ${errors.color ? 'border-red-400 bg-red-50/50' : 'border-gray-200 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium flex items-center justify-between`}
+                >
+                  {formData.color ? (
+                    <div className="flex items-center gap-3">
                       <span
-                        className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-md"
-                        style={{ backgroundColor: color.hex_code }}
+                        className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-md"
+                        style={{ backgroundColor: availableColors.find(c => c.id === formData.color)?.hex_code || '#ccc' }}
                       />
-                      <span className="text-sm font-medium">{color.name}</span>
-                    </label>
-                  ))}
+                      <span>{availableColors.find(c => c.id === formData.color)?.name || 'انتخاب شده'}</span>
+                    </div>
+                  ) : (
+                    <span>انتخاب رنگ...</span>
+                  )}
+                  <span className="text-gray-400">▼</span>
+                </button>
+                {showColorDropdown && availableColors.length > 0 && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl max-h-60 overflow-y-auto">
+                    {availableColors.map((color) => (
+                      <div
+                        key={color.id}
+                        onClick={() => handleColorSelect(color.id)}
+                        className="p-4 hover:bg-blue-50 cursor-pointer transition-all duration-200 border-b border-gray-100 last:border-b-0 flex items-center gap-4"
+                      >
+                        <span
+                          className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-md"
+                          style={{ backgroundColor: color.hex_code }}
+                        />
+                        <span className="text-sm font-medium">{color.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </LabelInput>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <LabelInput label={formData.auction ? "قیمت پایه" : "قیمت"} required error={errors.price}>
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  name="price"
+                  min="1"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="قیمت به تومان..."
+                  className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                />
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+                  <input
+                    type="checkbox"
+                    name="auction"
+                    checked={formData.auction}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <label className="text-sm font-medium text-gray-800">مزایده</label>
                 </div>
-              ) : (
-                <div className="text-gray-500 text-center py-4">
-                  {selectedModel ? 'رنگی برای این مدل موجود نیست' : 'ابتدا مدل موبایل را انتخاب کنید'}
-                </div>
-              )}
+              </div>
             </LabelInput>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && formData.type_product !== "new" && (
               <LabelInput label="سلامت باتری (درصد)" error={errors.battry_health}>
-                <input
-                  type="number"
-                  name="battry_health"
-                  min="0"
-                  max="100"
-                  value={formData.battry_health}
-                  onChange={handleChange}
-                  placeholder="سلامت باتری به درصد"
-                  className={`w-full border-2 ${errors.battry_health ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-                />
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    name="battry_health"
+                    min="0"
+                    max="100"
+                    value={formData.battry_health}
+                    onChange={handleChange}
+                    placeholder="سلامت باتری به درصد"
+                    className={`w-full border-2 ${errors.battry_health ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+                  />
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+                    <input
+                      type="checkbox"
+                      name="battry_change"
+                      checked={formData.battry_change}
+                      onChange={handleChange}
+                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label className="text-sm font-medium text-gray-800">تعویض باتری</label>
+                  </div>
+                </div>
               </LabelInput>
             )}
 
@@ -510,7 +536,7 @@ const ProductForm: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && (
-              <LabelInput label="کارتون">
+              <LabelInput label="کارتن">
                 <select
                   name="carton"
                   value={formData.carton}
@@ -540,9 +566,22 @@ const ProductForm: React.FC = () => {
                 </select>
               </LabelInput>
             )}
+
+            {formData.type_product !== "new" && (
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+                <input
+                  type="checkbox"
+                  name="repaired"
+                  checked={formData.repaired}
+                  onChange={handleChange}
+                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-8">
             {formData.grade === "D" && (
               <LabelInput label="مشکلات فنی">
                 <textarea
@@ -571,44 +610,18 @@ const ProductForm: React.FC = () => {
                 </div>
               )}
             </LabelInput>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            {formData.type_product !== "new" && (
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                <input
-                  type="checkbox"
-                  name="battry_change"
-                  checked={formData.battry_change}
+            {formData.grade !== "A" && (
+              <LabelInput label="توضیحات ظاهری">
+                <textarea
+                  name="description_appearance"
+                  value={formData.description_appearance}
                   onChange={handleChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  rows={4}
+                  placeholder="توضیحات ظاهری محصول را وارد کنید..."
+                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
                 />
-                <label className="text-sm font-medium text-gray-800">باتری تعویض شده</label>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-              <input
-                type="checkbox"
-                name="auction"
-                checked={formData.auction}
-                onChange={handleChange}
-                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-              />
-              <label className="text-sm font-medium text-gray-800">مزایده</label>
-            </div>
-
-            {formData.type_product !== "new" && (
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                <input
-                  type="checkbox"
-                  name="repaired"
-                  checked={formData.repaired}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
-              </div>
+              </LabelInput>
             )}
           </div>
 

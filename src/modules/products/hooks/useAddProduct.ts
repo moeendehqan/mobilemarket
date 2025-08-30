@@ -8,7 +8,7 @@ const useAddProduct = () => {
         mutationFn: addProductService,
         mutationKey: ["addProduct"],
         onSuccess: () => {
-            navigate("/products");
+            navigate("/");
         }
     });
 
