@@ -52,8 +52,9 @@ const ProductTable = () => {
       </span>
     );
   };
+  const arrayData = Array.isArray(data) ? data : [];
 
-  const filteredData = data?.filter((product: Product) => {
+  const filteredData =arrayData.filter((product: Product) => {
     const matchesSearch = product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (typeof product.model_mobile === 'object' && product.model_mobile?.model_name?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = !statusFilter || product.status_product === statusFilter;
