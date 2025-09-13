@@ -1,10 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { LoginPage, RegisterPage, CustomerPage, CustomerDetailPage, ProductPage, AddProductPage, OrdersPage } from '../modules';
+import {
+  LoginPage,
+  RegisterPage,
+  CustomerPage,
+  CustomerDetailPage,
+  ProductPage,
+  AddProductPage,
+  OrdersPage,
+} from '../modules';
 import App from '../App';
 import DetailProductPage from '../modules/products/pages/detail-product.page';
 import OrderDetailPage from '../modules/order/pages/order-detail.page';
 import StatisticPage from '../modules/home/pages/statistic.page';
 import ProfilePage from '../modules/profile/pages/ProfilePage';
+import WalletPage from '../modules/wallet/pages/WalletPage';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -12,50 +22,54 @@ const router = createBrowserRouter([
     children: [
       {
         path: 'profile',
-        element: <ProfilePage />
+        element: <ProfilePage />,
+      },
+      {
+        path: 'wallet',
+        element: <WalletPage />,
       },
       {
         path: 'stats',
-        element: <StatisticPage />
+        element: <StatisticPage />,
       },
       {
         path: 'customers',
-        element: <CustomerPage />
+        element: <CustomerPage />,
       },
       {
         path: 'customers/:id',
-        element: <CustomerDetailPage />
+        element: <CustomerDetailPage />,
       },
       {
         path: '',
-        element: <ProductPage />
+        element: <ProductPage />,
       },
       {
         path: 'products/add',
-        element: <AddProductPage />
+        element: <AddProductPage />,
       },
       {
         path: 'products/:id',
-        element: <DetailProductPage />
+        element: <DetailProductPage />,
       },
       {
         path: 'orders',
-        element: <OrdersPage />
+        element: <OrdersPage />,
       },
       {
         path: 'orders/:id',
-        element: <OrderDetailPage />
-      }
-    ]
+        element: <OrderDetailPage />,
+      },
+    ],
   },
   {
-    path:'login',
-    element: <LoginPage />
+    path: 'login',
+    element: <LoginPage />,
   },
   {
-    path:'register',
-    element: <RegisterPage />
-  }
+    path: 'register',
+    element: <RegisterPage />,
+  },
 ]);
 
 export default router;
