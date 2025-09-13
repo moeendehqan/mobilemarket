@@ -1,1 +1,1 @@
-export const url = "https//shikala.com"
+export const url = "https://api.shikala.com";

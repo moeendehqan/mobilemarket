@@ -1,0 +1,23 @@
+@font-face {
+    font-family: "YekanBakh";
+    src: url("/src/assets/fonts/YekanBakh-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "YekanBakh";
+    src: url("/src/assets/fonts/YekanBakh-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "YekanBakh";
+    src: url("/src/assets/fonts/YekanBakh-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
