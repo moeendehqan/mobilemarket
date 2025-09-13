@@ -4,11 +4,16 @@ import App from '../App';
 import DetailProductPage from '../modules/products/pages/detail-product.page';
 import OrderDetailPage from '../modules/order/pages/order-detail.page';
 import StatisticPage from '../modules/home/pages/statistic.page';
+import ProfilePage from '../modules/profile/pages/ProfilePage';
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      {
+        path: 'profile',
+        element: <ProfilePage />
+      },
       {
         path: 'stats',
         element: <StatisticPage />
