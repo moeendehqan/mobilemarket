@@ -1,2 +1,10 @@
+@import "./styles/fonts.css";
 @import "tailwindcss";
 
+body {
+    font-family: YekanBakh;
+}
+
+button {
+    cursor: pointer;
+}

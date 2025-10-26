@@ -31,7 +31,7 @@ interface FormDataType {
   description_appearance: string;
   technical_problem: string;
   price: string;
-  color: number | null;
+  color: number | null | string;
   battry_health: string;
   battry_change: boolean;
   type_product?: "new" | "as new" | "used" | null;
@@ -42,7 +42,7 @@ interface FormDataType {
   status_product: string;
   carton: string;
   grade: string;
-  model_mobile: number | null;
+  model_mobile: number | string | null;
   pictures: File[];
 }
 
@@ -50,7 +50,7 @@ const LabelInput: React.FC<{
   label: string;
   children: React.ReactNode;
   required?: boolean;
-  error?: string;
+  error?: string | null;
 }> = ({ label, children, required, error }) => (
   <div className="flex flex-col gap-3">
     <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -331,7 +331,7 @@ const ProductForm: React.FC = () => {
         <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
           {/* انتخاب مدل موبایل */}
           <div className="mb-8">
-            <LabelInput label="انتخاب مدل موبایل" required error={errors.model_mobile}>
+            <LabelInput label="انتخاب مدل موبایل" required error={errors.model_mobile as string}>
               <div className="relative" ref={dropdownRef}>
                 <input
                   type="text"
@@ -397,7 +397,7 @@ const ProductForm: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <LabelInput label="رنگ" required error={errors.color}>
+            <LabelInput label="رنگ" required error={errors.color as string}>
               <div className="relative" ref={colorDropdownRef}>
                 <button
                   type="button"
