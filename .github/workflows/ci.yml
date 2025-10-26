@@ -1,4 +1,4 @@
-name: Deploy Shikala to Server Iraq
+name: Deploy Shikala Front via Docker Compose
 
 on:
   push:
@@ -20,16 +20,16 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd /var/www
-            if [ -d "vite-app" ]; then
-              cd vite-app
-              git reset --hard
-              git pull origin main
+          ssh -T -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /var/www/shikala-front
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/moeendehqan/mobilemarket.git .
             else
-              git clone https://github.com/moeendehqan/mobilemarket.git vite-app
-              cd vite-app
+              git fetch --all
+              git reset --hard origin/main
             fi
-            npm install --legacy-peer-deps
-            npm run build
+            # Docker Compose Build و Up
+            docker-compose pull || true
+            docker-compose build
+            docker-compose up -d
           EOF
