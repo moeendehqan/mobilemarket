@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -T -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -t -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /var/www/shikala-front
             if [ ! -d ".git" ]; then
               git clone https://github.com/moeendehqan/mobilemarket.git .
