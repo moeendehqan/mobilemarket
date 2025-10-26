@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  vite-app:
+    build: .
+    container_name: shikala-front
+    ports:
+      - "4070:7000"
+    restart: unless-stopped

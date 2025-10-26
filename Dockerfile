@@ -8,7 +8,6 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-# build کامل با tsc و vite
 RUN npm run build
 
 RUN npm install -g serve
