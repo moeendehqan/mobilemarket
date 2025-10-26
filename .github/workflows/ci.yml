@@ -29,7 +29,7 @@ jobs:
               git reset --hard origin/main
             fi
             # Docker Compose Build و Up
-            docker-compose pull || true
-            docker-compose build
-            docker-compose up -d
+            docker compose pull || true
+            docker compose build
+            docker compose up -d
           EOF
