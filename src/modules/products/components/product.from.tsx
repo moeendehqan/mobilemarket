@@ -509,7 +509,7 @@ const ProductForm: React.FC = () => {
                         className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                       />
                     </div>
-                    <div className="p-3 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 justify-items-center">
+                    <div className="p-3 grid grid-cols-3 gap-2 justify-items-center">
                       {filteredColors.map((color) => (
                         <button
                           key={color.id}
