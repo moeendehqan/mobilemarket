@@ -96,8 +96,67 @@ const ProductForm: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showColorDropdown, setShowColorDropdown] = useState<boolean>(false);
+  const [colorSearch, setColorSearch] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
+  const steps = [
+    "مدل و رنگ",
+    "توضیحات",
+    "قیمت و مزایده",
+    "باتری و نوع",
+    "کیفیت و گارانتی",
+    "تصاویر و ظاهر",
+  ];
+  // Explicit step index type to avoid literal-type comparison warnings (ts2367)
+  type StepIndex = 0 | 1 | 2 | 3 | 4 | 5;
+  const [currentStep, setCurrentStep] = useState<StepIndex>(0);
+
+  const validateStep = (step: StepIndex) => {
+    const newErrors: Partial<FormDataType> = {};
+    if (step === 0) {
+      if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
+      if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
+    } else if (step === 1) {
+      if (!formData.description) newErrors.description = "توضیحات الزامی است";
+    } else if (step === 2) {
+      if (!formData.price) newErrors.price = "قیمت الزامی است";
+      else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
+    } else if (step === 3) {
+      if (selectedModel?.is_apple && formData.type_product !== "new") {
+        if (
+          formData.battry_health &&
+          (!/^\d+$/.test(formData.battry_health) ||
+            parseInt(formData.battry_health) < 0 ||
+            parseInt(formData.battry_health) > 100)
+        ) {
+          newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
+        }
+      }
+    } else if (step === 4) {
+      if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) newErrors.guarantor = "ضامن باید عدد باشد";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((s) => (s < (steps.length - 1) ? ((s + 1) as StepIndex) : s));
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep((s) => (s > 0 ? ((s - 1) as StepIndex) : s));
+  };
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    if (currentStep === steps.length - 1) {
+      handleSubmit(e);
+    } else {
+      e.preventDefault();
+      handleNext();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -229,6 +288,13 @@ const ProductForm: React.FC = () => {
     model.brand.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const filteredColors = colorSearch.trim()
+    ? availableColors.filter(c =>
+        (c.name || "").toLowerCase().includes(colorSearch.toLowerCase()) ||
+        (c.hex_code || "").toLowerCase().includes(colorSearch.toLowerCase())
+      )
+    : availableColors;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -328,8 +394,21 @@ const ProductForm: React.FC = () => {
           <p className="text-gray-600 font-medium">اطلاعات کامل محصول را وارد کنید</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
-          {/* انتخاب مدل موبایل */}
+        <form onSubmit={onFormSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {steps.map((label, idx) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${idx <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>{idx + 1}</div>
+                  <span className={`text-sm ${idx === currentStep ? 'text-blue-700 font-semibold' : 'text-gray-600'}`}>{label}</span>
+                  {idx !== steps.length - 1 && <span className="w-6 h-[2px] bg-gray-300 mx-1 hidden sm:inline-block"></span>}
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* انتخاب مدل موبایل و رنگ - مرحله 1 */}
+          {currentStep === 0 && (
+          <>
           <div className="mb-8">
             <LabelInput label="انتخاب مدل موبایل" required error={errors.model_mobile as string}>
               <div className="relative" ref={dropdownRef}>
@@ -383,6 +462,7 @@ const ProductForm: React.FC = () => {
             </LabelInput>
           </div>
 
+          {currentStep === 1 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <LabelInput label="توضیحات" required error={errors.description}>
               <textarea
@@ -395,6 +475,7 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
           </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <LabelInput label="رنگ" required error={errors.color as string}>
@@ -418,26 +499,61 @@ const ProductForm: React.FC = () => {
                   <span className="text-gray-400">▼</span>
                 </button>
                 {showColorDropdown && availableColors.length > 0 && (
-                  <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl max-h-60 overflow-y-auto">
-                    {availableColors.map((color) => (
-                      <div
-                        key={color.id}
-                        onClick={() => handleColorSelect(color.id)}
-                        className="p-4 hover:bg-blue-50 cursor-pointer transition-all duration-200 border-b border-gray-100 last:border-b-0 flex items-center gap-4"
-                      >
-                        <span
-                          className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-md"
-                          style={{ backgroundColor: color.hex_code }}
-                        />
-                        <span className="text-sm font-medium">{color.name}</span>
-                      </div>
-                    ))}
+                  <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl max-h-80 overflow-y-auto">
+                    <div className="sticky top-0 bg-white p-3 border-b border-gray-100">
+                      <input
+                        type="text"
+                        value={colorSearch}
+                        onChange={(e) => setColorSearch(e.target.value)}
+                        placeholder="جستجوی رنگ..."
+                        className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      />
+                    </div>
+                    <div className="p-3 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 justify-items-center">
+                      {filteredColors.map((color) => (
+                        <button
+                          key={color.id}
+                          type="button"
+                          onClick={() => handleColorSelect(color.id)}
+                          className={`group flex flex-col items-center gap-1 px-2 py-2 rounded-xl border-2 transition-all duration-200 ${formData.color === color.id ? 'border-blue-500 ring-2 ring-blue-300 bg-blue-50' : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50'}`}
+                          title={color.name}
+                          aria-label={color.name}
+                        >
+                          <span
+                            className="w-10 h-10 sm:w-8 sm:h-8 rounded-full border border-gray-300 shadow-sm"
+                            style={{ backgroundColor: color.hex_code }}
+                          />
+                          <span className="hidden sm:block text-[11px] text-gray-700 truncate w-20 text-center">{color.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {filteredColors.length === 0 && (
+                      <div className="p-4 text-center text-sm text-gray-500">رنگی مطابق جستجو یافت نشد</div>
+                    )}
                   </div>
                 )}
               </div>
             </LabelInput>
           </div>
+          </>
+          )}
 
+          {currentStep === 1 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <LabelInput label="توضیحات" required error={errors.description}>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                placeholder="توضیحات محصول را وارد کنید..."
+                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
+              />
+            </LabelInput>
+          </div>
+          )}
+
+          {currentStep === 2 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <LabelInput label={formData.auction ? "قیمت پایه" : "قیمت"} required error={errors.price}>
               <div className="flex gap-3">
@@ -463,7 +579,9 @@ const ProductForm: React.FC = () => {
               </div>
             </LabelInput>
           </div>
+          )}
 
+          {currentStep === 3 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && formData.type_product !== "new" && (
               <LabelInput label="سلامت باتری (درصد)" error={errors.battry_health}>
@@ -533,7 +651,9 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
           </div>
+          )}
 
+          {currentStep === 4 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && (
               <LabelInput label="کارتن">
@@ -580,7 +700,9 @@ const ProductForm: React.FC = () => {
               </div>
             )}
           </div>
+          )}
 
+          {currentStep === 5 && (
           <div className="grid grid-cols-1 gap-6 mb-8">
             {formData.grade === "D" && (
               <LabelInput label="مشکلات فنی">
@@ -624,22 +746,38 @@ const ProductForm: React.FC = () => {
               </LabelInput>
             )}
           </div>
+          )}
 
-          <div className="flex justify-center pt-6">
+          <div className="flex justify-between items-center pt-6">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-12 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-3 text-lg"
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep === 0 || isSubmitting}
+              className="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-800 font-bold py-3 px-8 rounded-2xl transition-all duration-300 shadow-lg disabled:opacity-60"
             >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
-                  در حال پردازش...
-                </>
+              مرحله قبل
+            </button>
+            <button
+              type={currentStep === steps.length - 1 ? "submit" : "button"}
+              onClick={currentStep === steps.length - 1 ? undefined : handleNext}
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-10 rounded-2xl transition-all duration-300 shadow-2xl flex items-center gap-3"
+            >
+              {currentStep === steps.length - 1 ? (
+                isSubmitting ? (
+                  <>
+                    <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                    در حال پردازش...
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">✨</span>
+                    ایجاد محصول
+                  </>
+                )
               ) : (
                 <>
-                  <span className="text-xl">✨</span>
-                  ایجاد محصول
+                  مرحله بعد
                 </>
               )}
             </button>
