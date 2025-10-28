@@ -24,5 +24,9 @@ export type UserType = {
     updated_at: string | null;
     is_register: boolean;
     user_permissions: PermissionType[] | null | undefined;
+    business_license?: string | null;
+    head_store_image?: string | null;
+    store_window_image?: string | null;
+    Warranty_check_image?: string | null;
 
 }
