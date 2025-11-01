@@ -61,7 +61,7 @@ const DetailProductPage = () => {
     };
 
     // Handle camera data - it's an array of Camera objects
-    const cameraData = Array.isArray(product.camera) ? (product.camera as Camera[]) : [];
+    const cameraData = Array.isArray((product as any).camera) ? ((product as any).camera as Camera[]) : [];
 
     // Handle picture data - it's an array of Picture objects
     const pictureData = Array.isArray(product.picture) ? (product.picture as Picture[]) : [];
@@ -74,7 +74,7 @@ const DetailProductPage = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => navigate("/products")}
+                                onClick={() => navigate("/")}
                                 className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105">
                                 <BiArrowBack className="text-xl" />
                             </button>
@@ -139,7 +139,7 @@ const DetailProductPage = () => {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                                     <span className="text-gray-600 font-medium">شماره قطعه:</span>
-                                    <span className="font-semibold text-gray-800 font-mono text-sm">{product.part_number || "-"}</span>
+                                    <span className="font-semibold text-gray-800 font-mono text-sm">{product.part_num ?? "-"}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                                     <span className="text-gray-600 font-medium">حافظه رم:</span>
@@ -175,9 +175,9 @@ const DetailProductPage = () => {
                                             <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full transition-all duration-300 ${
-                                                        parseInt(product.battry_health) >= 80
+                                                        product.battry_health >= 80
                                                             ? "bg-green-500"
-                                                            : parseInt(product.battry_health) >= 60
+                                                            : product.battry_health >= 60
                                                             ? "bg-yellow-500"
                                                             : "bg-red-500"
                                                     }`}
@@ -361,7 +361,7 @@ const DetailProductPage = () => {
                                 {product.seller && (
                                     <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                                         <span className="text-gray-600 font-medium">شناسه فروشنده:</span>
-                                        <span className="font-semibold text-gray-800">{product.seller}</span>
+                                        <span className="font-semibold text-gray-800">{String(product.seller)}</span>
                                     </div>
                                 )}
                             </div>
@@ -488,7 +488,7 @@ const DetailProductPage = () => {
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
                                     <span className="text-gray-600 font-medium">قیمت نهایی:</span>
-                                    <span className="font-bold text-green-600 text-lg">{formatPrice(product.price ?? null)}</span>
+                                    <span className="font-bold text-green-600 text-lg">{formatPrice(product.price?.toString() ?? null)}</span>
                                 </div>
                             </div>
 

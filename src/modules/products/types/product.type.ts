@@ -9,7 +9,7 @@ export interface Product {
     description_appearance: string;
     technical_problem: string;
     price: number;
-    color: Color | number;
+    color: Color | string | number;
     picture: Picture[];
     battry_health: number;
     battry_change: boolean;
@@ -18,6 +18,16 @@ export interface Product {
     guarantor: number;
     repaired: boolean;
     part_num: string | null;
+    // Additional fields used in detail product page
+    battry?: number | string | null;
+    ram?: number | string | null;
+    sim_card?: string | null;
+    charger?: boolean;
+    carton?: string | null;
+    hit_product?: boolean;
+    registered?: boolean;
+    size?: string | null;
+    register_date?: string | null;
     status_product: "open" | "saled" | "canseled" | "reserved" | null;
     grade: string;
     model_mobile: {

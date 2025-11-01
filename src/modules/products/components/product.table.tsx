@@ -20,6 +20,7 @@ const ProductTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [gradeFilter, setGradeFilter] = useState('');
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { text: string; class: string }> = {
@@ -50,7 +51,8 @@ const ProductTable = () => {
         product.model_mobile?.model_name?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = !statusFilter || product.status_product === statusFilter;
     const matchesType = !typeFilter || product.type_product === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesGrade = !gradeFilter || product.grade === gradeFilter;
+    return matchesSearch && matchesStatus && matchesType && matchesGrade;
   });
 
   if (isLoading) {
@@ -80,7 +82,7 @@ const ProductTable = () => {
 
       {/* فیلترها */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">جستجو</label>
             <input
@@ -113,6 +115,19 @@ const ProductTable = () => {
               <option value="">همه انواع</option>
               <option value="new">نو</option>
               <option value="used">کارکرده</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">درجه</label>
+            <select
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
+              <option value="">همه درجات</option>
+              <option value="A">A - در حد نو</option>
+              <option value="B">B - خط و خش جزئی</option>
+              <option value="C">C - خط و خش و ضربه</option>
+              <option value="D">D - نیاز به تعمیر</option>
             </select>
           </div>
         </div>
