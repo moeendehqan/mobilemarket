@@ -30,6 +30,8 @@ export interface Product {
     register_date?: string | null;
     status_product: "open" | "saled" | "canseled" | "reserved" | null;
     grade: string;
+    is_available: boolean;
+    reversed_to?: string | null;
     model_mobile: {
         id: number;
         picture: Picture[];

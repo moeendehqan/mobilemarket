@@ -1,4 +1,5 @@
 import useDetailProduct from "../hooks/useDetailProduct";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { BiArrowBack, BiCamera, BiImage } from "react-icons/bi";
@@ -21,6 +22,40 @@ const DetailProductPage = () => {
     const navigate = useNavigate();
     const { data: product, isLoading, error } = useDetailProduct(id ?? "");
     const { isPending: isPendingOrderSet, mutate: mutateOrderSet } = useOrderSet(Number(id));
+
+    // Countdown for reservation expiration (reversed_to)
+    const [countdown, setCountdown] = useState<string>("");
+    useEffect(() => {
+        const reversedTo = product?.reversed_to;
+        if (!reversedTo) {
+            setCountdown("");
+            return;
+        }
+        const target = new Date(reversedTo).getTime();
+        if (isNaN(target)) {
+            setCountdown("");
+            return;
+        }
+        const update = () => {
+            const diff = target - Date.now();
+            if (diff <= 0) {
+                setCountdown("رزرو به پایان رسید");
+                return;
+            }
+            const totalSeconds = Math.floor(diff / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const timeStr = days > 0
+                ? `${days} روز ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                : `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            setCountdown(timeStr);
+        };
+        update();
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, [product?.reversed_to]);
 
     if (isLoading || isPendingOrderSet) {
         return (
@@ -98,6 +133,22 @@ const DetailProductPage = () => {
                                         typeMap[product.type_product]?.class
                                     }`}>
                                     {typeMap[product.type_product]?.text}
+                                </span>
+                            )}
+                            {typeof product.is_available === 'boolean' && (
+                                <span
+                                    className={`px-4 py-2 rounded-full text-sm font-medium shadow-sm ${
+                                        product.is_available ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    {product.is_available ? 'قابل رزرو' : 'غیرقابل رزرو'}
+                                </span>
+                            )}
+                            {product.reversed_to && (
+                                <span
+                                    className={`px-4 py-2 rounded-full text-sm font-medium shadow-sm ${
+                                        countdown === 'رزرو به پایان رسید' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                    {countdown === 'رزرو به پایان رسید' ? 'رزرو خاتمه یافت' : `زمان رزرو: ${countdown}`}
                                 </span>
                             )}
                         </div>
