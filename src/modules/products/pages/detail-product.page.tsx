@@ -6,6 +6,7 @@ import { BiArrowBack, BiCamera, BiImage } from "react-icons/bi";
 import type { Camera } from "../types/camera.type";
 import type { Picture } from "../types/picture.type";
 import useOrderSet from "../../order/hooks/userOrderSet";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatPrice = (price: string | null) => {
     if (!price) return "";
@@ -22,6 +23,7 @@ const DetailProductPage = () => {
     const navigate = useNavigate();
     const { data: product, isLoading, error } = useDetailProduct(id ?? "");
     const { isPending: isPendingOrderSet, mutate: mutateOrderSet } = useOrderSet(Number(id));
+    const queryClient = useQueryClient();
 
     // Countdown for reservation expiration (reversed_to)
     const [countdown, setCountdown] = useState<string>("");
@@ -546,7 +548,13 @@ const DetailProductPage = () => {
                             {/* Order Button */}
                             <div className="mt-6">
                                 <button
-                                    onClick={() => mutateOrderSet()}
+                                    onClick={() =>
+                                        mutateOrderSet(undefined, {
+                                            onSuccess: () => {
+                                                queryClient.invalidateQueries({ queryKey: ["detailProduct", id ?? ""] });
+                                            },
+                                        })
+                                    }
                                     disabled={
                                         isPendingOrderSet || !product.is_available || product.status_product === "saled" || product.status_product === "reserved"
                                     }
