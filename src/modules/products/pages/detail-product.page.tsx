@@ -548,10 +548,10 @@ const DetailProductPage = () => {
                                 <button
                                     onClick={() => mutateOrderSet()}
                                     disabled={
-                                        isPendingOrderSet || product.status_product === "saled" || product.status_product === "reserved"
+                                        isPendingOrderSet || !product.is_available || product.status_product === "saled" || product.status_product === "reserved"
                                     }
                                     className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 ${
-                                        isPendingOrderSet || product.status_product === "saled" || product.status_product === "reserved"
+                                        isPendingOrderSet || !product.is_available || product.status_product === "saled" || product.status_product === "reserved"
                                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                             : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                                     }`}>
@@ -564,6 +564,8 @@ const DetailProductPage = () => {
                                         "محصول فروخته شده"
                                     ) : product.status_product === "reserved" ? (
                                         "محصول رزرو شده"
+                                    ) : product.is_available === false ? (
+                                        "غیر قابل سفارش"
                                     ) : (
                                         "ثبت سفارش"
                                     )}

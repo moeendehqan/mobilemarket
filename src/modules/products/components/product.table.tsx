@@ -2,7 +2,62 @@ import useProductsList from '../hooks/useProductsList';
 import { BiSolidMessageSquareDetail } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types/product.type';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+// نشانگر شمارش معکوس رزرو تا زمان reversed_to
+const CountdownBadge: React.FC<{ reversedTo?: string | null }> = ({ reversedTo }) => {
+  const [label, setLabel] = useState<string>('');
+  const [expired, setExpired] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!reversedTo) {
+      setExpired(false);
+      setLabel('');
+      return;
+    }
+
+    const target = new Date(reversedTo).getTime();
+    if (isNaN(target)) {
+      setExpired(true);
+      setLabel('رزرو به پایان رسید');
+      return;
+    }
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const update = () => {
+      const now = Date.now();
+      const diff = target - now;
+      if (diff <= 0) {
+        setExpired(true);
+        setLabel('رزرو به پایان رسید');
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      const timeStr = days > 0 ? `${days}روز ${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+      setExpired(false);
+      setLabel(timeStr);
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [reversedTo]);
+
+  if (!reversedTo) return null;
+  const cls = expired ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+  return <span className={`px-2 py-1 rounded-full text-sm ${cls}`}>{label}</span>;
+};
+
+// نشانگر قابلیت رزرو
+const getAvailableBadge = (available: boolean) => {
+  const info = available
+    ? { text: 'قابل رزرو', class: 'bg-green-100 text-green-800' }
+    : { text: 'غیرقابل رزرو', class: 'bg-gray-100 text-gray-800' };
+  return <span className={`px-2 py-1 rounded-full text-sm ${info.class}`}>{info.text}</span>;
+};
 
 const formatPrice = (price: string | null) => {
   if (!price) return '';
@@ -168,8 +223,12 @@ const ProductTable = () => {
                 </p>
 
                 <div className="flex items-center justify-between mb-3">
-                  {getStatusBadge(product.status_product || '')}
-                  {getTypeBadge(product.type_product || '')}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getStatusBadge(product.status_product || '')}
+                    {getTypeBadge(product.type_product || '')}
+                    {typeof product.is_available === 'boolean' && getAvailableBadge(!!product.is_available)}
+                    {product.reversed_to && <CountdownBadge reversedTo={product.reversed_to} />}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between">
