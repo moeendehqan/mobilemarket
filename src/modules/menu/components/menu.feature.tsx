@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { MenuItem } from '../types';
-import { BiHomeAlt, BiPackage, BiCart, BiInfoCircle, BiPhone, BiChevronLeft, BiMenu, BiWallet } from 'react-icons/bi';
+import { BiHomeAlt, BiPackage, BiCart, BiInfoCircle, BiPhone, BiChevronLeft, BiMenu, BiWallet, BiUser } from 'react-icons/bi';
 import useUser from '../../auth/Hooks/useUser';
 import { Link } from 'react-router-dom';
 
@@ -39,6 +39,14 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
     },
     {
       id: 5,
+      name: 'اگهی های من',
+      path: '/productme',
+      icon: <BiUser />,
+      children: null,
+      is_active: true,
+    },
+    {
+      id: 5,
       name: 'کیف پول',
       path: '/wallet',
       icon: <BiWallet />,
@@ -48,7 +56,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
     {
       id: 6,
       name: 'درباره ما',
-      path: '/',
+      path: '/about',
       icon: <BiInfoCircle />,
       children: null,
       is_active: true,
@@ -56,7 +64,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
     {
       id: 7,
       name: 'تماس با ما',
-      path: '/',
+      path: '/contact',
       icon: <BiPhone />,
       children: null,
       is_active: true,
