@@ -2,6 +2,7 @@ import type { Picture } from "./picture.type";
 import type { Color } from "./color.type";
 import type { UserType } from "../../auth/types/user.type";
 
+// اینترفیس: Product
 export interface Product {
     id?: number;
     seller?: UserType | number;
@@ -9,6 +10,7 @@ export interface Product {
     description_appearance: string;
     technical_problem: string;
     price: number;
+    customer_price: number;
     color: Color | string | number;
     picture: Picture[];
     battry_health: number;

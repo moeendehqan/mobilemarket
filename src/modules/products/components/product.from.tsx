@@ -26,11 +26,14 @@ const GRADE_OPTIONS = [
   { value: "D", label: "D - نیاز به تعمیر" },
 ];
 
+// کامپوننت: ProductForm
+
 interface FormDataType {
   description: string;
   description_appearance: string;
   technical_problem: string;
   price: string;
+  customer_price: string;
   color: number | null | string;
   battry_health: string;
   battry_change: boolean;
@@ -72,6 +75,7 @@ const ProductForm: React.FC = () => {
     description_appearance: "",
     technical_problem: "",
     price: "",
+    customer_price: "",
     color: null,
     battry_health: "",
     battry_change: false,
@@ -121,6 +125,10 @@ const ProductForm: React.FC = () => {
     } else if (step === 2) {
       if (!formData.price) newErrors.price = "قیمت الزامی است";
       else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
+      // اعتبارسنجی قیمت مشتری (اختیاری، در صورت وارد شدن باید مثبت باشد)
+      if (formData.customer_price && (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0)) {
+        newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
+      }
     } else if (step === 3) {
       if (selectedModel?.is_apple && formData.type_product !== "new") {
         if (
@@ -184,6 +192,10 @@ const ProductForm: React.FC = () => {
       newErrors.price = "قیمت الزامی است";
     } else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) {
       newErrors.price = "قیمت باید عدد مثبت باشد";
+    }
+    // اعتبارسنجی قیمت مشتری (اختیاری)
+    if (formData.customer_price && (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0)) {
+      newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
     }
     if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
     if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
@@ -327,9 +339,11 @@ const ProductForm: React.FC = () => {
         return;
       }
 
+      // داخل handleSubmit: ساخت payload برای ارسال به بک‌اند
       const payload: any = {
         ...formData,
         price: parseInt(formData.price),
+        customer_price: formData.customer_price ? parseInt(formData.customer_price) : undefined,
         battry_health: formData.battry_health ? parseInt(formData.battry_health) : 0,
         guarantor: formData.guarantor ? parseInt(formData.guarantor) : 0,
         model_mobile: {
@@ -351,6 +365,7 @@ const ProductForm: React.FC = () => {
           description_appearance: "",
           technical_problem: "",
           price: "",
+          customer_price: "",
           color: null,
           battry_health: "",
           battry_change: false,
@@ -578,6 +593,19 @@ const ProductForm: React.FC = () => {
                 </div>
               </div>
             </LabelInput>
+          
+          {/* فیلد جدید: قیمت مشتری */}
+          <LabelInput label="قیمت مشتری" error={errors.customer_price as string}>
+            <input
+              type="number"
+              name="customer_price"
+              min="1"
+              value={formData.customer_price}
+              onChange={handleChange}
+              placeholder="قیمت مشتری به تومان..."
+              className={`w-full border-2 ${errors.customer_price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+            />
+          </LabelInput>
           </div>
           )}
 

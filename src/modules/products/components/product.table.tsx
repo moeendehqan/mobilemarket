@@ -59,9 +59,12 @@ const getAvailableBadge = (available: boolean) => {
   return <span className={`px-2 py-1 rounded-full text-sm ${info.class}`}>{info.text}</span>;
 };
 
-const formatPrice = (price: string | null) => {
-  if (!price) return '';
-  return new Intl.NumberFormat('fa-IR').format(parseInt(price)) + ' تومان';
+// کامپوننت: ProductTable
+
+const formatPrice = (price: string | number | null) => {
+  if (price === null || price === undefined) return '';
+  const n = typeof price === 'string' ? parseInt(price) : price;
+  return new Intl.NumberFormat('fa-IR').format(n) + ' تومان';
 };
 
 const formatDate = (date: string | null) => {
@@ -232,10 +235,18 @@ const ProductTable = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-blue-600">
-                    {formatPrice(product.price?.toString() || null)}
-                  </span>
-                  <span className="text-sm text-gray-500">{formatDate(product.created_at || null)}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-500">قیمت همکار</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {formatPrice(product.price ?? null)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm text-gray-500">قیمت مشتری</span>
+                    <span className="text-lg font-bold text-green-600">
+                      {formatPrice(product.customer_price ?? null)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

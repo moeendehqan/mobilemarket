@@ -1,4 +1,4 @@
-# React + TypeScript + Vite
+# MobileMarket
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
@@ -67,3 +67,16 @@ export default tseslint.config([
   },
 ])
 ```
+
+## فیلد قیمت مشتری (customer_price)
+- منظور: قیمت نهایی برای فروش به مشتری
+- تفاوت با `price`: قیمت همکار برای معاملات داخلی/همکاران
+- نمایش:
+  - فرم افزودن محصول: فیلدهای «قیمت همکار» و «قیمت مشتری»
+  - لیست محصولات و اگهی‌های من: هر دو قیمت با برچسب‌های مشخص
+  - صفحه جزئیات محصول: هر دو قیمت
+- اعتبارسنجی: هر دو فیلد الزامی و باید عدد مثبت باشند
+- API: سرویس ایجاد محصول (`POST /api/store/product/`) فیلد `customer_price` را دریافت می‌کند
+
+### تست‌ها
+- برای اجرای تست‌ها پیشنهاد می‌شود Vitest اضافه شود:

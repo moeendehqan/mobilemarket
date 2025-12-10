@@ -161,12 +161,23 @@ const ProductMeTable = () => {
                   {getAvailableBadge(!!product.is_available)}
                 </div>
 
+                // کامپوننت: ProductMeTable
+                
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-base font-bold text-blue-600">
-                    {formatPrice(product.price)}
-                  </span>
-                  <span className="text-xs text-gray-500">{formatDate(product.created_at)}</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">قیمت همکار</span>
+                    <span className="text-base font-bold text-blue-600">
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-500">قیمت مشتری</span>
+                    <span className="text-base font-bold text-green-600">
+                      {formatPrice(product.customer_price)}
+                    </span>
+                  </div>
                 </div>
+                <span className="text-xs text-gray-500">{formatDate(product.created_at)}</span>
               </div>
             </div>
           ))}
