@@ -28,5 +28,6 @@ export type UserType = {
     head_store_image?: string | null;
     store_window_image?: string | null;
     Warranty_check_image?: string | null;
+    type_client: 'customer' | 'business' | null;
 
 }
