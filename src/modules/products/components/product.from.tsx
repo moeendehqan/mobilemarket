@@ -138,7 +138,7 @@ const ProductForm: React.FC = () => {
       }
       if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) newErrors.guarantor = "ضامن باید عدد باشد";
     } else if (step === 3) {
-      if (!formData.description) newErrors.description = "توضیحات الزامی است";
+      if (formData.type_product === "used" && !formData.description) newErrors.description = "توضیحات الزامی است";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -184,7 +184,7 @@ const ProductForm: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: Partial<FormDataType> = {};
-    if (!formData.description) newErrors.description = "توضیحات الزامی است";
+    if (formData.type_product === "used" && !formData.description) newErrors.description = "توضیحات الزامی است";
     if (!formData.price) {
       newErrors.price = "قیمت الزامی است";
     } else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) {
@@ -474,20 +474,7 @@ const ProductForm: React.FC = () => {
             </LabelInput>
           </div>
 
-          {currentStep === 1 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <LabelInput label="توضیحات" required error={errors.description}>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                placeholder="توضیحات محصول را وارد کنید..."
-                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
-              />
-            </LabelInput>
-          </div>
-          )}
+
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <LabelInput label="رنگ" required error={errors.color as string}>
@@ -576,7 +563,7 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
 
-            <LabelInput label="نوع فروش">
+            {/* <LabelInput label="نوع فروش">
               <div className="flex items-center gap-3 p-3.5 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
                 <input
                   type="checkbox"
@@ -587,7 +574,7 @@ const ProductForm: React.FC = () => {
                 />
                 <label className="text-sm font-medium text-gray-800">مزایده</label>
               </div>
-            </LabelInput>
+            </LabelInput> */}
           </div>
           )}
 
@@ -614,7 +601,7 @@ const ProductForm: React.FC = () => {
                       onChange={handleChange}
                       className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                     />
-                    <label className="text-sm font-medium text-gray-800">تعویض باتری</label>
+                    <label className="text-sm font-medium text-gray-800">باتری تعویض شده</label>
                   </div>
                 </div>
               </LabelInput>
@@ -708,18 +695,34 @@ const ProductForm: React.FC = () => {
           </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 3 && (
           <div className="grid grid-cols-1 gap-6 mb-8">
-            <LabelInput label="توضیحات" required error={errors.description}>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                placeholder="توضیحات محصول را وارد کنید..."
-                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
-              />
-            </LabelInput>
+            {formData.type_product === "used" && (
+              <LabelInput label="توضیحات" required error={errors.description}>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="توضیحات محصول را وارد کنید..."
+                  className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
+                />
+              </LabelInput>
+            )}
+
+            {(formData.grade === "C" || formData.grade === "D") && (
+              <LabelInput label="توضیحات ظاهری">
+                <textarea
+                  name="description_appearance"
+                  value={formData.description_appearance}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="توضیحات ظاهری محصول را وارد کنید..."
+                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
+                />
+              </LabelInput>
+            )}
+
             {formData.grade === "D" && (
               <LabelInput label="مشکلات فنی">
                 <textarea
@@ -748,19 +751,6 @@ const ProductForm: React.FC = () => {
                 </div>
               )}
             </LabelInput>
-
-            {formData.grade !== "A" && (
-              <LabelInput label="توضیحات ظاهری">
-                <textarea
-                  name="description_appearance"
-                  value={formData.description_appearance}
-                  onChange={handleChange}
-                  rows={4}
-                  placeholder="توضیحات ظاهری محصول را وارد کنید..."
-                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
-                />
-              </LabelInput>
-            )}
           </div>
           )}
 
