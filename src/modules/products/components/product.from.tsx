@@ -105,14 +105,12 @@ const ProductForm: React.FC = () => {
   const colorDropdownRef = useRef<HTMLDivElement>(null);
   const steps = [
     "مدل و رنگ",
-    "توضیحات",
     "قیمت و مزایده",
-    "باتری و نوع",
-    "کیفیت و گارانتی",
+    "مشخصات فنی",
     "تصاویر و ظاهر",
   ];
   // Explicit step index type to avoid literal-type comparison warnings (ts2367)
-  type StepIndex = 0 | 1 | 2 | 3 | 4 | 5;
+  type StepIndex = 0 | 1 | 2 | 3;
   const [currentStep, setCurrentStep] = useState<StepIndex>(0);
 
   const validateStep = (step: StepIndex) => {
@@ -121,15 +119,13 @@ const ProductForm: React.FC = () => {
       if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
       if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
     } else if (step === 1) {
-      if (!formData.description) newErrors.description = "توضیحات الزامی است";
-    } else if (step === 2) {
       if (!formData.price) newErrors.price = "قیمت الزامی است";
       else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
       // اعتبارسنجی قیمت مشتری (اختیاری، در صورت وارد شدن باید مثبت باشد)
       if (formData.customer_price && (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0)) {
         newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
       }
-    } else if (step === 3) {
+    } else if (step === 2) {
       if (selectedModel?.is_apple && formData.type_product !== "new") {
         if (
           formData.battry_health &&
@@ -140,8 +136,9 @@ const ProductForm: React.FC = () => {
           newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
         }
       }
-    } else if (step === 4) {
       if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) newErrors.guarantor = "ضامن باید عدد باشد";
+    } else if (step === 3) {
+      if (!formData.description) newErrors.description = "توضیحات الزامی است";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -554,62 +551,47 @@ const ProductForm: React.FC = () => {
           )}
 
           {currentStep === 1 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <LabelInput label="توضیحات" required error={errors.description}>
-              <textarea
-                name="description"
-                value={formData.description}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <LabelInput label={formData.auction ? "قیمت پایه" : "قیمت"} required error={errors.price}>
+              <input
+                type="number"
+                name="price"
+                min="1"
+                value={formData.price}
                 onChange={handleChange}
-                rows={4}
-                placeholder="توضیحات محصول را وارد کنید..."
-                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
+                placeholder="قیمت به تومان..."
+                className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
               />
+            </LabelInput>
+          
+            <LabelInput label="قیمت مشتری" error={errors.customer_price as string}>
+              <input
+                type="number"
+                name="customer_price"
+                min="1"
+                value={formData.customer_price}
+                onChange={handleChange}
+                placeholder="قیمت مشتری به تومان..."
+                className={`w-full border-2 ${errors.customer_price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+              />
+            </LabelInput>
+
+            <LabelInput label="نوع فروش">
+              <div className="flex items-center gap-3 p-3.5 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+                <input
+                  type="checkbox"
+                  name="auction"
+                  checked={formData.auction}
+                  onChange={handleChange}
+                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label className="text-sm font-medium text-gray-800">مزایده</label>
+              </div>
             </LabelInput>
           </div>
           )}
 
           {currentStep === 2 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <LabelInput label={formData.auction ? "قیمت پایه" : "قیمت"} required error={errors.price}>
-              <div className="flex gap-3">
-                <input
-                  type="number"
-                  name="price"
-                  min="1"
-                  value={formData.price}
-                  onChange={handleChange}
-                  placeholder="قیمت به تومان..."
-                  className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-                />
-                <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                  <input
-                    type="checkbox"
-                    name="auction"
-                    checked={formData.auction}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label className="text-sm font-medium text-gray-800">مزایده</label>
-                </div>
-              </div>
-            </LabelInput>
-          
-          {/* فیلد جدید: قیمت مشتری */}
-          <LabelInput label="قیمت مشتری" error={errors.customer_price as string}>
-            <input
-              type="number"
-              name="customer_price"
-              min="1"
-              value={formData.customer_price}
-              onChange={handleChange}
-              placeholder="قیمت مشتری به تومان..."
-              className={`w-full border-2 ${errors.customer_price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-            />
-          </LabelInput>
-          </div>
-          )}
-
-          {currentStep === 3 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && formData.type_product !== "new" && (
               <LabelInput label="سلامت باتری (درصد)" error={errors.battry_health}>
@@ -678,11 +660,7 @@ const ProductForm: React.FC = () => {
                 className={`w-full border-2 ${errors.guarantor ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
               />
             </LabelInput>
-          </div>
-          )}
 
-          {currentStep === 4 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {selectedModel?.is_apple && (
               <LabelInput label="کارتن">
                 <select
@@ -730,8 +708,18 @@ const ProductForm: React.FC = () => {
           </div>
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 4 && (
           <div className="grid grid-cols-1 gap-6 mb-8">
+            <LabelInput label="توضیحات" required error={errors.description}>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                placeholder="توضیحات محصول را وارد کنید..."
+                className={`w-full border-2 ${errors.description ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none`}
+              />
+            </LabelInput>
             {formData.grade === "D" && (
               <LabelInput label="مشکلات فنی">
                 <textarea
