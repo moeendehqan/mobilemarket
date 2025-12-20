@@ -545,10 +545,7 @@ const DetailProductPage = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-                                    <span className="text-gray-600 font-medium">قیمت نهایی:</span>
-                                    <span className="font-bold text-green-600 text-lg">{formatPrice(product.price?.toString() ?? null)}</span>
-                                </div>
+        
                             </div>
 
                             {/* Order Button */}
