@@ -1,4 +1,5 @@
 import useProductsList from '../hooks/useProductsList';
+import useUser from '../../auth/Hooks/useUser';
 import { BiSolidMessageSquareDetail } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types/product.type';
@@ -74,6 +75,7 @@ const formatDate = (date: string | null) => {
 
 const ProductTable = () => {
   const { data, isLoading, error } = useProductsList();
+  const { data: user } = useUser();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -235,18 +237,21 @@ const ProductTable = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">قیمت همکار</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {formatPrice(product.price ?? null)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-sm text-gray-500">قیمت مشتری</span>
-                    <span className="text-lg font-bold text-green-600">
-                      {formatPrice(product.customer_price ?? null)}
-                    </span>
-                  </div>
+                  {user?.type_client === 'business' ? (
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">قیمت همکار</span>
+                      <span className="text-lg font-bold text-blue-600">
+                        {formatPrice(product.price ?? null)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">قیمت</span>
+                      <span className="text-lg font-bold text-green-600">
+                        {formatPrice(product.customer_price ?? null)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

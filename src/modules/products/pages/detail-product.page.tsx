@@ -1,4 +1,5 @@
 import useDetailProduct from "../hooks/useDetailProduct";
+import useUser from "../../auth/Hooks/useUser";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,7 @@ const formatDate = (date: string | null) => {
 const DetailProductPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { data: user } = useUser();
     const { data: product, isLoading, error } = useDetailProduct(id ?? "");
     const { isPending: isPendingOrderSet, mutate: mutateOrderSet } = useOrderSet(Number(id));
     const queryClient = useQueryClient();
@@ -172,9 +174,13 @@ const DetailProductPage = () => {
                                     <span className="font-semibold text-gray-800">{product.model_mobile?.brand || "-"}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-                                    <span className="text-gray-600 font-medium">قیمت:</span>
-                                    <span className="font-bold text-green-600 text-lg">
-                                        {formatPrice(product.price?.toString() ?? null)}
+                                    <span className="text-gray-600 font-medium">
+                                        {user?.type_client === 'business' ? 'قیمت همکار:' : 'قیمت:'}
+                                    </span>
+                                    <span className={`font-bold text-lg ${user?.type_client === 'business' ? 'text-blue-600' : 'text-green-600'}`}>
+                                        {user?.type_client === 'business'
+                                            ? formatPrice(product.price?.toString() ?? null)
+                                            : formatPrice(product.customer_price?.toString() ?? null)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
