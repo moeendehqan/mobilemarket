@@ -20,8 +20,9 @@ const useLogin = (mobile: string, otp: string) => {
             });
         }
         if (isSuccess && data) {
-            Cookies.set('access_token', data.access, { expires: 7 });
-            Cookies.set('refresh_token', data.refresh, { expires: 7 });
+            const sixHours = 6 / 24;
+            Cookies.set('access_token', data.access, { expires: sixHours });
+            Cookies.set('refresh_token', data.refresh, { expires: sixHours });
             toast.success("موفقیت آمیز", {
                 toastId: 'login-success',
             });

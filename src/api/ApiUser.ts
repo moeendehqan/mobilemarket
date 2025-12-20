@@ -45,7 +45,15 @@ ApiUser.interceptors.response.use(
                 });
 
                 const { access_token } = response.data;
-                Cookies.set('access_token', access_token);
+                
+                // تنظیم کوکی‌ها برای انقضا پس از 6 ساعت
+                const sixHours = 6 / 24;
+                Cookies.set('access_token', access_token, { expires: sixHours });
+                
+                // تمدید زمان انقضای رفرش توکن (Sliding Session)
+                if (refreshToken) {
+                    Cookies.set('refresh_token', refreshToken, { expires: sixHours });
+                }
 
                 originalRequest.headers.Authorization = `Bearer ${access_token}`;
                 return axios(originalRequest);
