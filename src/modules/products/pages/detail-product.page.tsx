@@ -81,10 +81,10 @@ const DetailProductPage = () => {
     }
 
     const statusMap: Record<string, { text: string; class: string }> = {
-        open: { text: "باز", class: "bg-green-100 text-green-800" },
+        open: { text: "قابل سفارش", class: "bg-green-100 text-green-800" },
         saled: { text: "فروخته شده", class: "bg-blue-100 text-blue-800" },
         canseled: { text: "لغو شده", class: "bg-red-100 text-red-800" },
-        reserved: { text: "رزرو شده", class: "bg-yellow-100 text-yellow-800" },
+        reserved: { text: "بیع", class: "bg-yellow-100 text-yellow-800" },
     };
 
     const typeMap: Record<string, { text: string; class: string }> = {

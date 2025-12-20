@@ -8,10 +8,10 @@ import type { Color } from "../types/color.type";
 import { usePartNumber } from "../hooks/usePartNumber";
 
 const STATUS_OPTIONS = [
-  { value: "open", label: "باز" },
+  { value: "open", label: "قابل سفارش" },
   { value: "saled", label: "فروخته شده" },
   { value: "canseled", label: "لغو شده" },
-  { value: "reserved", label: "رزرو شده" },
+  { value: "reserved", label: "بیع" },
 ];
 
 const CARTON_OPTIONS = [

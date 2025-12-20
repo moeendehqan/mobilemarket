@@ -84,10 +84,10 @@ const ProductTable = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { text: string; class: string }> = {
-      open: { text: 'باز', class: 'bg-green-100 text-green-800' },
+      open: { text: 'قابل سفارش', class: 'bg-green-100 text-green-800' },
       saled: { text: 'فروخته شده', class: 'bg-blue-100 text-blue-800' },
       canseled: { text: 'لغو شده', class: 'bg-red-100 text-red-800' },
-      reserved: { text: 'رزرو شده', class: 'bg-yellow-100 text-yellow-800' },
+      reserved: { text: 'بیع', class: 'bg-yellow-100 text-yellow-800' },
     };
     const statusInfo = statusMap[status] || { text: '', class: '' };
     return <span className={`px-2 py-1 rounded-full text-sm ${statusInfo.class}`}>{statusInfo.text}</span>;
@@ -160,10 +160,10 @@ const ProductTable = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
               <option value="">همه وضعیت‌ها</option>
-              <option value="open">باز</option>
+              <option value="open">قابل سفارش</option>
               <option value="saled">فروخته شده</option>
               <option value="canseled">لغو شده</option>
-              <option value="reserved">رزرو شده</option>
+              <option value="reserved">بیع</option>
             </select>
           </div>
           <div>
