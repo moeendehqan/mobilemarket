@@ -7,12 +7,7 @@ import type { modelMobileType } from "../types/modelmobile.type";
 import type { Color } from "../types/color.type";
 import { usePartNumber } from "../hooks/usePartNumber";
 
-const STATUS_OPTIONS = [
-  { value: "open", label: "قابل سفارش" },
-  { value: "saled", label: "فروخته شده" },
-  { value: "canseled", label: "لغو شده" },
-  { value: "reserved", label: "بیع" },
-];
+
 
 const CARTON_OPTIONS = [
   { value: "orginal", label: "اصلی" },
@@ -764,8 +759,9 @@ const ProductForm: React.FC = () => {
               مرحله قبل
             </button>
             <button
-              type={currentStep === steps.length - 1 ? "submit" : "button"}
-              onClick={currentStep === steps.length - 1 ? undefined : handleNext}
+              key={currentStep === steps.length - 1 ? "submit-btn" : "next-btn"}
+              type="button"
+              onClick={(e) => currentStep === steps.length - 1 ? handleSubmit(e as unknown as React.FormEvent) : handleNext()}
               disabled={isSubmitting}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-10 rounded-2xl transition-all duration-300 shadow-2xl flex items-center gap-3"
             >
