@@ -17,14 +17,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="min-h-screen bg-gray-50 rtl">
             <MenuFeature isOpen={isMenuOpen} onToggle={handleMenuToggle} />
             
-            {/* Overlay for mobile when menu is open */}
-            {isMenuOpen && (
-                <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    onClick={handleMenuToggle}
-                />
-            )}
-            
             <main 
                 className={`transition-all duration-300 ease-in-out
                 ${isMenuOpen ? 'lg:mr-64' : 'lg:mr-20'}`}

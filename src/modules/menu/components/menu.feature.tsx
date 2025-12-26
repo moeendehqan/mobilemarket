@@ -49,7 +49,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
       is_active: true,
     },
     {
-      id: 5,
+      id: 8, // Changed from 5 to 8 to be unique
       name: 'کیف پول',
       path: '/wallet',
       icon: <BiWallet />,
@@ -76,6 +76,9 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
 
   const handleItemClick = (id: number) => {
     setActiveItem(id);
+    if (window.innerWidth < 1024 && onToggle) {
+      onToggle();
+    }
   };
 
   return (
@@ -86,6 +89,14 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
         className="lg:hidden fixed top-4 right-4 z-60 bg-white rounded-full p-2 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
         <BiMenu className="text-gray-600" />
       </button>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={onToggle}
+        />
+      )}
 
       <div className={`fixed top-0 right-0 h-full z-50 ${!isOpen ? 'lg:block hidden' : ''}`}>
         <div
@@ -110,9 +121,9 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
               {data
                 .filter((item) => item.is_active)
                 .map((item) => (
-                  <a
+                  <Link
                     key={item.id}
-                    href={item.path}
+                    to={item.path}
                     onClick={() => handleItemClick(item.id)}
                     className={`flex items-center ${isOpen ? 'justify-start px-4' : 'justify-center'} py-3 rounded-lg
                                     ${
@@ -130,7 +141,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
                         {item.name}
                       </div>
                     )}
-                  </a>
+                  </Link>
                 ))}
             </nav>
           </div>
