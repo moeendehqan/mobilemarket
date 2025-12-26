@@ -3,6 +3,9 @@ import type { MenuItem } from '../types';
 import { BiHomeAlt, BiPackage, BiCart, BiInfoCircle, BiPhone, BiChevronLeft, BiMenu, BiWallet, BiUser } from 'react-icons/bi';
 import useUser from '../../auth/Hooks/useUser';
 import { Link } from 'react-router-dom';
+import BalanceView from '../../accounting/components/balanceVeiw';
+
+
 
 interface MenuFeatureProps {
   isOpen?: boolean;
@@ -144,6 +147,7 @@ const MenuFeature = ({ isOpen = true, onToggle }: MenuFeatureProps) => {
                   </p>
                   <p className="text-xs text-gray-500">{user?.company || ''}</p>
                 </div>
+                <BalanceView /> 
               </Link>
             </div>
           )}
