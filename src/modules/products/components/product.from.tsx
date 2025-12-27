@@ -31,7 +31,7 @@ interface FormDataType {
   customer_price: string;
   color: number | null | string;
   battry_health: string;
-  battry_change: boolean;
+  battry_change: boolean | null;
   type_product?: "new" | "as new" | "used" | null;
   auction: boolean;
   guarantor: string;
@@ -43,6 +43,8 @@ interface FormDataType {
   model_mobile: number | string | null;
   pictures: File[];
 }
+
+type FormErrors = Partial<Record<keyof FormDataType, string>>;
 
 const LabelInput: React.FC<{
   label: string;
@@ -73,8 +75,8 @@ const ProductForm: React.FC = () => {
     customer_price: "",
     color: null,
     battry_health: "",
-    battry_change: false,
-    type_product: null,
+    battry_change: null,
+    type_product: "new",
     auction: false,
     guarantor: "",
     repaired: false,
@@ -99,41 +101,45 @@ const ProductForm: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
   const steps = [
-    "مدل و رنگ",
-    "قیمت و مزایده",
+    "برند و مدل و رنگ",
     "مشخصات فنی",
-    "تصاویر و ظاهر",
+    "قیمت و تصویر",
   ];
   // Explicit step index type to avoid literal-type comparison warnings (ts2367)
-  type StepIndex = 0 | 1 | 2 | 3;
+  type StepIndex = 0 | 1 | 2;
   const [currentStep, setCurrentStep] = useState<StepIndex>(0);
 
   const validateStep = (step: StepIndex) => {
-    const newErrors: Partial<FormDataType> = {};
+    const newErrors: FormErrors = {};
     if (step === 0) {
+      if (!formData.type_product) newErrors.type_product = "انتخاب نوع محصول الزامی است";
       if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
       if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
     } else if (step === 1) {
-      if (!formData.price) newErrors.price = "قیمت الزامی است";
-      else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
-      // اعتبارسنجی قیمت مشتری (اختیاری، در صورت وارد شدن باید مثبت باشد)
-      if (formData.customer_price && (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0)) {
-        newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
-      }
-    } else if (step === 2) {
-      if (selectedModel?.is_apple && formData.type_product !== "new") {
-        if (
-          formData.battry_health &&
-          (!/^\d+$/.test(formData.battry_health) ||
-            parseInt(formData.battry_health) < 0 ||
-            parseInt(formData.battry_health) > 100)
-        ) {
+      if (selectedModel?.is_apple) {
+        if (!formData.battry_health) {
+          newErrors.battry_health = "سلامت باتری الزامی است";
+        } else if (!/^\d+$/.test(formData.battry_health) || parseInt(formData.battry_health) < 0 || parseInt(formData.battry_health) > 100) {
           newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
         }
+        if (formData.battry_change === null) {
+          newErrors.battry_change = "وضعیت تعویض باتری الزامی است";
+        }
+        if (!formData.part_num) newErrors.part_num = "پارت نامبر الزامی است";
       }
-      if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) newErrors.guarantor = "ضامن باید عدد باشد";
-    } else if (step === 3) {
-      if (formData.type_product === "used" && !formData.description) newErrors.description = "توضیحات الزامی است";
+      if (!formData.guarantor) newErrors.guarantor = "ضمانت باقی‌مانده الزامی است";
+      else if (!/^\d+$/.test(formData.guarantor) || parseInt(formData.guarantor) < 0) newErrors.guarantor = "ضمانت باید عدد غیرمنفی باشد";
+      if (!formData.carton) newErrors.carton = "انتخاب کارتن الزامی است";
+      if (formData.repaired && !formData.description) newErrors.description = "توضیحات الزامی است";
+      if (formData.type_product === "used" && !formData.grade) newErrors.grade = "درجه محصول الزامی است";
+    } else if (step === 2) {
+      if (!formData.price) newErrors.price = "قیمت همکار الزامی است";
+      else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
+      if (!formData.customer_price) {
+        newErrors.customer_price = "قیمت مشتری الزامی است";
+      } else if (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0) {
+        newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -174,29 +180,28 @@ const ProductForm: React.FC = () => {
     };
   }, []);
 
-  const [errors, setErrors] = useState<Partial<FormDataType>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const { data: partNumbers } = usePartNumber();
 
   const validateForm = () => {
-    const newErrors: Partial<FormDataType> = {};
-    if (formData.type_product === "used" && !formData.description) newErrors.description = "توضیحات الزامی است";
-    if (!formData.price) {
-      newErrors.price = "قیمت الزامی است";
-    } else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) {
-      newErrors.price = "قیمت باید عدد مثبت باشد";
-    }
-    // اعتبارسنجی قیمت مشتری (اختیاری)
-    if (formData.customer_price && (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0)) {
-      newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
-    }
+    const newErrors: FormErrors = {};
+    if (!formData.type_product) newErrors.type_product = "انتخاب نوع محصول الزامی است";
     if (!formData.model_mobile) newErrors.model_mobile = "انتخاب مدل موبایل الزامی است";
     if (!formData.color) newErrors.color = "انتخاب رنگ الزامی است";
-    if (formData.battry_health && (!/^\d+$/.test(formData.battry_health) || parseInt(formData.battry_health) < 0 || parseInt(formData.battry_health) > 100)) {
-      newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
+    if (selectedModel?.is_apple) {
+      if (!formData.battry_health) newErrors.battry_health = "سلامت باتری الزامی است";
+      else if (!/^\d+$/.test(formData.battry_health) || parseInt(formData.battry_health) < 0 || parseInt(formData.battry_health) > 100) newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
+      if (!formData.part_num) newErrors.part_num = "پارت نامبر الزامی است";
     }
-    if (formData.guarantor && !/^\d+$/.test(formData.guarantor)) {
-      newErrors.guarantor = "ضامن باید عدد باشد";
-    }
+    if (!formData.guarantor) newErrors.guarantor = "ضمانت باقی‌مانده الزامی است";
+    else if (!/^\d+$/.test(formData.guarantor) || parseInt(formData.guarantor) < 0) newErrors.guarantor = "ضمانت باید عدد غیرمنفی باشد";
+    if (!formData.carton) newErrors.carton = "انتخاب کارتن الزامی است";
+    if (formData.repaired && !formData.description) newErrors.description = "توضیحات الزامی است";
+    if (formData.type_product === "used" && !formData.grade) newErrors.grade = "درجه محصول الزامی است";
+    if (!formData.price) newErrors.price = "قیمت همکار الزامی است";
+    else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
+    if (!formData.customer_price) newErrors.customer_price = "قیمت مشتری الزامی است";
+    else if (!/^\d+$/.test(formData.customer_price) || parseInt(formData.customer_price) <= 0) newErrors.customer_price = "قیمت مشتری باید عدد مثبت باشد";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -208,10 +213,8 @@ const ProductForm: React.FC = () => {
       setFormData(prev => ({ ...prev, pictures: Array.from(files) }));
     } else {
       let processedValue: any = value;
-      if (name === "color" || name === "model_mobile" || name === "guarantor") {
+      if (name === "color" || name === "model_mobile") {
         processedValue = value ? parseInt(value) : null;
-      } else if (name === "battry_health") {
-        processedValue = value ? parseInt(value) : "";
       }
       
       if (name === "grade") {
@@ -227,21 +230,24 @@ const ProductForm: React.FC = () => {
           setFormData(prev => ({
             ...prev,
             [name]: processedValue,
-            grade: "A",
+            grade: "",
             battry_change: false,
             repaired: false,
-            battry_health: "100"
+            battry_health: selectedModel?.is_apple ? "100" : ""
           }));
         } else {
           setFormData(prev => ({
             ...prev,
-            [name]: processedValue
+            [name]: processedValue,
+            grade: processedValue === "used" ? "A" : ""
           }));
         }
       } else {
         setFormData(prev => ({
           ...prev,
-          [name]: type === "checkbox" ? checked : processedValue,
+          [name]: name === "battry_change"
+            ? (processedValue === "true" ? true : processedValue === "false" ? false : null)
+            : (type === "checkbox" ? checked : processedValue),
         }));
       }
     }
@@ -260,8 +266,8 @@ const ProductForm: React.FC = () => {
       model_mobile: model.id,
       color: null,
       part_num: model.is_apple ? (model.part_number || '') : '',
-      battry_health: model.is_apple ? prev.battry_health : '85',
-      carton: model.is_apple ? prev.carton : 'orginal'
+      battry_health: model.is_apple ? (prev.battry_health || '100') : '',
+      carton: prev.carton || 'orginal'
     }));
     if (errors.model_mobile) {
       setErrors(prev => ({ ...prev, model_mobile: undefined }));
@@ -377,6 +383,7 @@ const ProductForm: React.FC = () => {
         setSearchTerm("");
         setShowDropdown(false);
         setErrors({});
+        setCurrentStep(0);
       } else {
         toast.error("خطا در ایجاد محصول");
       }
@@ -413,9 +420,23 @@ const ProductForm: React.FC = () => {
               ))}
             </div>
           </div>
-          {/* انتخاب مدل موبایل و رنگ - مرحله 1 */}
+          {/* انتخاب نوع، مدل و رنگ - مرحله 1 */}
           {currentStep === 0 && (
           <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <LabelInput label="نوع محصول" required error={errors.type_product as string}>
+              <select
+                name="type_product"
+                value={formData.type_product || ""}
+                onChange={handleChange}
+                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+              >
+                <option value="">انتخاب کنید</option>
+                <option value="new">نو</option>
+                <option value="used">کارکرده</option>
+              </select>
+            </LabelInput>
+          </div>
           <div className="mb-8">
             <LabelInput label="انتخاب مدل موبایل" required error={errors.model_mobile as string}>
               <div className="relative" ref={dropdownRef}>
@@ -532,52 +553,13 @@ const ProductForm: React.FC = () => {
           </>
           )}
 
-          {currentStep === 1 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <LabelInput label={formData.auction ? "قیمت پایه" : "قیمت"} required error={errors.price}>
-              <input
-                type="number"
-                name="price"
-                min="1"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="قیمت به تومان..."
-                className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-              />
-            </LabelInput>
           
-            <LabelInput label="قیمت مشتری" error={errors.customer_price as string}>
-              <input
-                type="number"
-                name="customer_price"
-                min="1"
-                value={formData.customer_price}
-                onChange={handleChange}
-                placeholder="قیمت مشتری به تومان..."
-                className={`w-full border-2 ${errors.customer_price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
-              />
-            </LabelInput>
 
-            {/* <LabelInput label="نوع فروش">
-              <div className="flex items-center gap-3 p-3.5 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                <input
-                  type="checkbox"
-                  name="auction"
-                  checked={formData.auction}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label className="text-sm font-medium text-gray-800">مزایده</label>
-              </div>
-            </LabelInput> */}
-          </div>
-          )}
-
-          {currentStep === 2 && (
+          {currentStep === 1 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {selectedModel?.is_apple && formData.type_product !== "new" && (
-              <LabelInput label="سلامت باتری (درصد)" error={errors.battry_health}>
-                <div className="flex gap-3">
+            {selectedModel?.is_apple && (
+              <>
+                <LabelInput label="سلامت باتری (درصد)" required error={errors.battry_health as string}>
                   <input
                     type="number"
                     name="battry_health"
@@ -588,35 +570,40 @@ const ProductForm: React.FC = () => {
                     placeholder="سلامت باتری به درصد"
                     className={`w-full border-2 ${errors.battry_health ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
                   />
-                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                    <input
-                      type="checkbox"
-                      name="battry_change"
-                      checked={formData.battry_change}
-                      onChange={handleChange}
-                      className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label className="text-sm font-medium text-gray-800">باتری تعویض شده</label>
+                </LabelInput>
+                <LabelInput label="باتری تعویض شده" required error={errors.battry_change as string}>
+                  <div className="flex items-center gap-6 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="battry_change"
+                        value="true"
+                        checked={formData.battry_change === true}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm">بله</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="battry_change"
+                        value="false"
+                        checked={formData.battry_change === false}
+                        onChange={handleChange}
+                        className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm">خیر</span>
+                    </label>
                   </div>
-                </div>
-              </LabelInput>
+                </LabelInput>
+              </>
             )}
 
-            <LabelInput label="نوع محصول">
-              <select
-                name="type_product"
-                value={formData.type_product || ""}
-                onChange={handleChange}
-                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
-              >
-                <option value="">انتخاب کنید</option>
-                <option value="new">نو</option>
-                <option value="used">کارکرده</option>
-              </select>
-            </LabelInput>
+            
 
-            {formData.type_product !== "new" && (
-              <LabelInput label="درجه کیفیت">
+            {formData.type_product === "used" && (
+              <LabelInput label="درجه کیفیت" required error={errors.grade as string}>
                 <select
                   name="grade"
                   value={formData.grade}
@@ -643,21 +630,19 @@ const ProductForm: React.FC = () => {
               />
             </LabelInput>
 
-            {selectedModel?.is_apple && (
-              <LabelInput label="کارتن">
-                <select
-                  name="carton"
-                  value={formData.carton}
-                  onChange={handleChange}
-                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
-                >
-                  <option value="">انتخاب کنید</option>
-                  {CARTON_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </LabelInput>
-            )}
+            <LabelInput label="کارتن" required error={errors.carton as string}>
+              <select
+                name="carton"
+                value={formData.carton}
+                onChange={handleChange}
+                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium"
+              >
+                <option value="">انتخاب کنید</option>
+                {CARTON_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </LabelInput>
 
             {selectedModel?.is_apple && (
               <LabelInput label="پارت نامبر">
@@ -675,25 +660,18 @@ const ProductForm: React.FC = () => {
               </LabelInput>
             )}
 
-            {formData.type_product !== "new" && (
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
-                <input
-                  type="checkbox"
-                  name="repaired"
-                  checked={formData.repaired}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
-              </div>
-            )}
-          </div>
-          )}
-
-          {currentStep === 3 && (
-          <div className="grid grid-cols-1 gap-6 mb-8">
-            {formData.type_product === "used" && (
-              <LabelInput label="توضیحات" required error={errors.description}>
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+              <input
+                type="checkbox"
+                name="repaired"
+                checked={formData.repaired}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
+            </div>
+            {formData.repaired && (
+              <LabelInput label="توضیحات" required error={errors.description as string}>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -704,32 +682,36 @@ const ProductForm: React.FC = () => {
                 />
               </LabelInput>
             )}
+          </div>
+          )}
 
-            {(formData.grade === "C" || formData.grade === "D") && (
-              <LabelInput label="توضیحات ظاهری">
-                <textarea
-                  name="description_appearance"
-                  value={formData.description_appearance}
+          {currentStep === 2 && (
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <LabelInput label="قیمت همکار" required error={errors.price as string}>
+                <input
+                  type="number"
+                  name="price"
+                  min="1"
+                  value={formData.price}
                   onChange={handleChange}
-                  rows={4}
-                  placeholder="توضیحات ظاهری محصول را وارد کنید..."
-                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
+                  placeholder="قیمت به تومان..."
+                  className={`w-full border-2 ${errors.price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
                 />
               </LabelInput>
-            )}
-
-            {formData.grade === "D" && (
-              <LabelInput label="مشکلات فنی">
-                <textarea
-                  name="technical_problem"
-                  value={formData.technical_problem}
+            
+              <LabelInput label="قیمت مشتری" required error={errors.customer_price as string}>
+                <input
+                  type="number"
+                  name="customer_price"
+                  min="1"
+                  value={formData.customer_price}
                   onChange={handleChange}
-                  rows={4}
-                  placeholder="مشکلات فنی محصول را شرح دهید..."
-                  className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium resize-none"
+                  placeholder="قیمت مشتری به تومان..."
+                  className={`w-full border-2 ${errors.customer_price ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
                 />
               </LabelInput>
-            )}
+            </div>
 
             <LabelInput label="تصاویر محصول">
               <input
@@ -760,8 +742,8 @@ const ProductForm: React.FC = () => {
             </button>
             <button
               key={currentStep === steps.length - 1 ? "submit-btn" : "next-btn"}
-              type="button"
-              onClick={(e) => currentStep === steps.length - 1 ? handleSubmit(e as unknown as React.FormEvent) : handleNext()}
+              type={currentStep === steps.length - 1 ? "submit" : "button"}
+              onClick={(e) => currentStep === steps.length - 1 ? undefined : handleNext()}
               disabled={isSubmitting}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-10 rounded-2xl transition-all duration-300 shadow-2xl flex items-center gap-3"
             >

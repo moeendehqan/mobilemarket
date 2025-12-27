@@ -3,6 +3,7 @@ import useUser from '../../auth/Hooks/useUser';
 import type { Product } from '../types/product.type';
 import { useEffect, useState } from 'react';
 import ProductCard from './product.cart';
+import { CARTON_OPTIONS } from './product-form/constants';
 
 // کامپوننت: ProductTable
 
@@ -13,6 +14,8 @@ const ProductTable = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [gradeFilter, setGradeFilter] = useState('');
+  const [cartonFilter, setCartonFilter] = useState('');
+  const [repairedFilter, setRepairedFilter] = useState('');
   const arrayData = Array.isArray(data) ? data : [];
 
   const filteredData = arrayData.filter((product: Product) => {
@@ -23,7 +26,9 @@ const ProductTable = () => {
     const matchesStatus = !statusFilter || product.status_product === statusFilter;
     const matchesType = !typeFilter || product.type_product === typeFilter;
     const matchesGrade = !gradeFilter || product.grade === gradeFilter;
-    return matchesSearch && matchesStatus && matchesType && matchesGrade;
+    const matchesCarton = !cartonFilter || product.carton === cartonFilter;
+    const matchesRepaired = !repairedFilter || String(product.repaired) === repairedFilter;
+    return matchesSearch && matchesStatus && matchesType && matchesGrade && matchesCarton && matchesRepaired;
   });
 
   if (isLoading) {
@@ -99,6 +104,29 @@ const ProductTable = () => {
               <option value="B">B - خط و خش جزئی</option>
               <option value="C">C - خط و خش و ضربه</option>
               <option value="D">D - نیاز به تعمیر</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">کارتن</label>
+            <select
+              value={cartonFilter}
+              onChange={(e) => setCartonFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
+              <option value="">همه</option>
+              {CARTON_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">تعمیر شده</label>
+            <select
+              value={repairedFilter}
+              onChange={(e) => setRepairedFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
+              <option value="">همه</option>
+              <option value="true">بله</option>
+              <option value="false">خیر</option>
             </select>
           </div>
         </div>
