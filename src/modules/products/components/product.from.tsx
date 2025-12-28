@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import useAddProduct from "../hooks/useAddProduct";
+import useUpdateProduct from "../hooks/useUpdateProduct";
+import useDetailProduct from "../hooks/useDetailProduct";
 import useAddPicture from "../hooks/addPicture";
 import { toast } from "react-hot-toast";
 import useModelMobile from "../hooks/useModelMobile";
 import type { modelMobileType } from "../types/modelmobile.type";
 import type { Color } from "../types/color.type";
 import { usePartNumber } from "../hooks/usePartNumber";
-
-
 
 const CARTON_OPTIONS = [
   { value: "orginal", label: "اصلی" },
@@ -66,7 +66,14 @@ const LabelInput: React.FC<{
   </div>
 );
 
-const ProductForm: React.FC = () => {
+interface ProductFormProps {
+  productId?: string;
+}
+
+const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
+  const isEdit = !!productId;
+  const { data: productData, isLoading: isLoadingProduct } = useDetailProduct(productId || "");
+  
   const [formData, setFormData] = useState<FormDataType>({
     description: "",
     description_appearance: "",
@@ -88,7 +95,8 @@ const ProductForm: React.FC = () => {
     pictures: [],
   });
 
-  const { mutateAsync: mutateProduct, isPending: isPendingProduct } = useAddProduct();
+  const { mutateAsync: addProduct, isPending: isAddingProduct } = useAddProduct();
+  const { mutateAsync: updateProduct, isPending: isUpdatingProduct } = useUpdateProduct();
   const { mutateAsync: mutatePicture, isPending: isPendingPicture } = useAddPicture();
   const { data: modelMobiles, isLoading: isLoadingModels } = useModelMobile();
 
@@ -108,6 +116,38 @@ const ProductForm: React.FC = () => {
   // Explicit step index type to avoid literal-type comparison warnings (ts2367)
   type StepIndex = 0 | 1 | 2;
   const [currentStep, setCurrentStep] = useState<StepIndex>(0);
+
+  // Populate form data when in edit mode and data is loaded
+  useEffect(() => {
+    if (isEdit && productData) {
+      setFormData({
+        description: productData.description || "",
+        description_appearance: productData.description_appearance || "",
+        technical_problem: productData.technical_problem || "",
+        price: productData.price ? String(productData.price) : "",
+        customer_price: productData.customer_price ? String(productData.customer_price) : "",
+        color: typeof productData.color === 'object' ? (productData.color as any)?.id : productData.color,
+        battry_health: productData.battry_health ? String(productData.battry_health) : "",
+        battry_change: productData.battry_change,
+        type_product: productData.type_product || "new",
+        auction: productData.auction || false,
+        guarantor: productData.guarantor ? String(productData.guarantor) : "",
+        repaired: productData.repaired || false,
+        part_num: productData.part_num || "",
+        status_product: productData.status_product || "open",
+        carton: productData.carton || "",
+        grade: productData.grade || "",
+        model_mobile: productData.model_mobile?.id || null,
+        pictures: [], // Existing pictures handling is complex, for now we leave it empty or handle separately
+      });
+
+      if (productData.model_mobile) {
+        setSelectedModel(productData.model_mobile as unknown as modelMobileType);
+        setAvailableColors(productData.model_mobile.colors || []);
+        setSearchTerm(`${productData.model_mobile.model_name} - ${productData.model_mobile.brand}`);
+      }
+    }
+  }, [isEdit, productData]);
 
   const validateStep = (step: StepIndex) => {
     const newErrors: FormErrors = {};
@@ -351,49 +391,60 @@ const ProductForm: React.FC = () => {
         color: formData.color,
       };
       
+      // Remove internal form fields that shouldn't be sent to API
+      delete payload.pictures;
+
       if (pictureIds.length > 0) {
         payload.picture = pictureIds.map(id => ({ id }));
       }
 
-      const response = await mutateProduct(payload);
-      if (response) {
-        toast.success("محصول با موفقیت ایجاد شد");
-        setFormData({
-          description: "",
-          description_appearance: "",
-          technical_problem: "",
-          price: "",
-          customer_price: "",
-          color: null,
-          battry_health: "",
-          battry_change: false,
-          type_product: null,
-          auction: false,
-          guarantor: "",
-          repaired: false,
-          part_num: "",
-          status_product: "open",
-          carton: "",
-          grade: "",
-          model_mobile: null,
-          pictures: [],
-        });
-        setSelectedModel(null);
-        setAvailableColors([]);
-        setSearchTerm("");
-        setShowDropdown(false);
-        setErrors({});
-        setCurrentStep(0);
+      let response;
+      if (isEdit && productId) {
+        response = await updateProduct({ id: parseInt(productId), data: payload });
       } else {
-        toast.error("خطا در ایجاد محصول");
+        response = await addProduct(payload);
+      }
+
+      if (response) {
+        toast.success(isEdit ? "محصول با موفقیت ویرایش شد" : "محصول با موفقیت ایجاد شد");
+        if (!isEdit) {
+            setFormData({
+              description: "",
+              description_appearance: "",
+              technical_problem: "",
+              price: "",
+              customer_price: "",
+              color: null,
+              battry_health: "",
+              battry_change: false,
+              type_product: null,
+              auction: false,
+              guarantor: "",
+              repaired: false,
+              part_num: "",
+              status_product: "open",
+              carton: "",
+              grade: "",
+              model_mobile: null,
+              pictures: [],
+            });
+            setSelectedModel(null);
+            setAvailableColors([]);
+            setSearchTerm("");
+            setShowDropdown(false);
+            setErrors({});
+            setCurrentStep(0);
+        }
+      } else {
+        toast.error(isEdit ? "خطا در ویرایش محصول" : "خطا در ایجاد محصول");
       }
     } catch (error) {
-      console.error("خطا در ایجاد محصول:", error);
-      toast.error("خطا در ایجاد محصول");
+      console.error(isEdit ? "خطا در ویرایش محصول:" : "خطا در ایجاد محصول:", error);
+      toast.error(isEdit ? "خطا در ویرایش محصول" : "خطا در ایجاد محصول");
     }
   };
 
-  const isSubmitting = isPendingProduct || isPendingPicture;
+  const isSubmitting = isAddingProduct || isUpdatingProduct || isPendingPicture;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
@@ -403,9 +454,13 @@ const ProductForm: React.FC = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-lg">📱</span>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">افزودن محصول جدید</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              {isEdit ? "ویرایش محصول" : "افزودن محصول جدید"}
+            </h1>
           </div>
-          <p className="text-gray-600 font-medium">اطلاعات کامل محصول را وارد کنید</p>
+          <p className="text-gray-600 font-medium">
+            {isEdit ? "اطلاعات محصول را ویرایش کنید" : "اطلاعات کامل محصول را وارد کنید"}
+          </p>
         </div>
 
         <form onSubmit={onFormSubmit} className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-8 border border-white/50">
@@ -756,7 +811,7 @@ const ProductForm: React.FC = () => {
                 ) : (
                   <>
                     <span className="text-xl">✨</span>
-                    ایجاد محصول
+                    {isEdit ? "ویرایش محصول" : "ایجاد محصول"}
                   </>
                 )
               ) : (

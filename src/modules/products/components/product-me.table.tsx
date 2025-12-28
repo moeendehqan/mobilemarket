@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import ListMeProductService from "../service/list-me-product.service";
 import useDeleteProduct from "../hooks/useDeleteProduct";
@@ -131,22 +131,35 @@ const ProductMeTable = () => {
               className="relative bg-white rounded-lg shadow border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer overflow-hidden"
               onClick={() => product.id && navigate(`/products/${product.id}`)}
             >
-              <button
-                disabled={isDeleting}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm("آیا از حذف این محصول مطمئن هستید؟")) {
-                    deleteProduct(product).then(() => {
-                      setData((prev) => prev.filter((p) => p.id !== product.id));
-                      toast.success("محصول با موفقیت حذف شد");
-                    });
-                  }
-                }}
-                className="absolute top-2 left-2 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors z-10 shadow-sm"
-                title="حذف محصول"
-              >
-                <FaTrash size={14} />
-              </button>
+              <div className="absolute top-2 left-2 flex gap-2 z-10">
+                <button
+                  disabled={isDeleting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/products/edit/${product.id}`);
+                  }}
+                  className="p-2 bg-blue-50 text-blue-500 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                  title="ویرایش محصول"
+                >
+                  <FaEdit size={14} />
+                </button>
+                <button
+                  disabled={isDeleting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm("آیا از حذف این محصول مطمئن هستید؟")) {
+                      deleteProduct(product).then(() => {
+                        setData((prev) => prev.filter((p) => p.id !== product.id));
+                        toast.success("محصول با موفقیت حذف شد");
+                      });
+                    }
+                  }}
+                  className="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-sm"
+                  title="حذف محصول"
+                >
+                  <FaTrash size={14} />
+                </button>
+              </div>
               <div className="h-40 bg-gray-100 flex items-center justify-center">
                 {product.picture && product.picture.length > 0 ? (
                   <img

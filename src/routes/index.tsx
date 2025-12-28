@@ -6,6 +6,7 @@ import {
   CustomerDetailPage,
   ProductPage,
   AddProductPage,
+  EditProductPage,
   OrdersPage,
 } from '../modules';
 import App from '../App';
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
       {
         path: 'products/add',
         element: <AddProductPage />,
+      },
+      {
+        path: 'products/edit/:id',
+        element: <EditProductPage />,
       },
       {
         path: 'products/:id',
