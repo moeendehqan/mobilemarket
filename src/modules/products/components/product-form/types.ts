@@ -11,7 +11,9 @@ export interface FormDataType {
   auction: boolean;
   guarantor: string;
   repaired: boolean;
+  registered: boolean;
   part_num: string;
+  charge_cicle: string;
   status_product: string;
   carton: string;
   grade: string;

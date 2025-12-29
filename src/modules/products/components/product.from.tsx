@@ -36,7 +36,9 @@ interface FormDataType {
   auction: boolean;
   guarantor: string;
   repaired: boolean;
+  registered: boolean;
   part_num: string;
+  charge_cicle: string;
   status_product: string;
   carton: string;
   grade: string;
@@ -87,7 +89,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     auction: false,
     guarantor: "",
     repaired: false,
+    registered: true,
     part_num: "",
+    charge_cicle: "0",
     status_product: "open",
     carton: "",
     grade: "",
@@ -135,7 +139,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         auction: productData.auction || false,
         guarantor: productData.guarantor ? String(productData.guarantor) : "",
         repaired: productData.repaired || false,
+        registered: productData.registered || true,
         part_num: productData.part_num || "",
+        charge_cicle: productData.charge_cicle ? String(productData.charge_cicle) : "0",
         status_product: productData.status_product || "open",
         carton: productData.carton || "",
         grade: productData.grade || "",
@@ -237,6 +243,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     if (!formData.carton) newErrors.carton = "انتخاب کارتن الزامی است";
     if (formData.repaired && !formData.description) newErrors.description = "توضیحات الزامی است";
     if (formData.type_product === "used" && !formData.grade) newErrors.grade = "درجه محصول الزامی است";
+    
+    if (!formData.charge_cicle) newErrors.charge_cicle = "سایکل شارژ الزامی است";
+    else if (!/^\d+$/.test(formData.charge_cicle) || parseInt(formData.charge_cicle) < 0 || parseInt(formData.charge_cicle) > 999) {
+      newErrors.charge_cicle = "سایکل شارژ باید عددی بین 0 تا 999 باشد";
+    }
+
     if (!formData.price) newErrors.price = "قیمت همکار الزامی است";
     else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
     if (!formData.customer_price) newErrors.customer_price = "قیمت مشتری الزامی است";
@@ -402,6 +414,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         customer_price: formData.customer_price ? parseInt(formData.customer_price) : undefined,
         battry_health: formData.battry_health ? parseInt(formData.battry_health) : 0,
         guarantor: formData.guarantor ? parseInt(formData.guarantor) : 0,
+        charge_cicle: formData.charge_cicle ? parseInt(formData.charge_cicle) : 0,
         model_mobile: {
           id: formData.model_mobile,
           picture: []
@@ -439,7 +452,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               auction: false,
               guarantor: "",
               repaired: false,
+              registered: true,
               part_num: "",
+              charge_cicle: "0",
               status_product: "open",
               carton: "",
               grade: "",
@@ -703,6 +718,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               />
             </LabelInput>
 
+            <LabelInput label="سایکل شارژ" required error={errors.charge_cicle}>
+              <input
+                type="number"
+                name="charge_cicle"
+                min="0"
+                max="999"
+                value={formData.charge_cicle}
+                onChange={handleChange}
+                placeholder="تعداد سایکل شارژ"
+                className={`w-full border-2 ${errors.charge_cicle ? 'border-red-400 focus:ring-red-400 bg-red-50/50' : 'border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30'} rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium`}
+              />
+            </LabelInput>
+
             <LabelInput label="کارتن" required error={errors.carton as string}>
               <select
                 name="carton"
@@ -743,6 +771,18 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               />
               <label className="text-sm font-medium text-gray-800">تعمیر شده</label>
             </div>
+
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl border-2 border-gray-200 shadow-lg">
+              <input
+                type="checkbox"
+                name="registered"
+                checked={formData.registered}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label className="text-sm font-medium text-gray-800">رجیستر شده</label>
+            </div>
+            
             {formData.repaired && (
               <LabelInput label="توضیحات" required error={errors.description as string}>
                 <textarea

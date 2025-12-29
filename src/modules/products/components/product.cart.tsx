@@ -109,9 +109,18 @@ const getColorBadge = (color: Product['color']) => {
   );
 };
 
+const getRegisteredBadge = (registered?: boolean) => {
+  if (registered === undefined || registered === null) return null;
+  return (
+    <span className={`px-2 py-1 rounded-full text-sm ${registered ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+      {registered ? 'رجیستر شده' : 'غیر رجیستر'}
+    </span>
+  );
+};
+
 interface ProductCardProps {
   product: Product;
-  user?: { type_client?: string } | null;
+  user?: { type_client?: string | null } | null;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, user }) => {
@@ -152,6 +161,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, user }) => {
             {getStatusBadge(product.status_product || '')}
             {getTypeBadge(product.type_product || 'new')}
             {getColorBadge(product.color)}
+            {getRegisteredBadge(product.registered)}
+
             {product.reversed_to && <CountdownBadge reversedTo={product.reversed_to} />}
           </div>
         </div>

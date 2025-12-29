@@ -1,5 +1,6 @@
 import type { Picture } from "./picture.type";
 import type { Color } from "./color.type";
+import type { Camera } from "./camera.type";
 import type { UserType } from "../../auth/types/user.type";
 
 // اینترفیس: Product
@@ -20,6 +21,7 @@ export interface Product {
     guarantor: number;
     repaired: boolean;
     part_num: string | null;
+    camera?: Camera[];
     // Additional fields used in detail product page
     battry?: number | string | null;
     ram?: number | string | null;
@@ -28,6 +30,7 @@ export interface Product {
     carton?: string | null;
     hit_product?: boolean;
     registered?: boolean;
+    charge_cicle?: number;
     size?: string | null;
     register_date?: string | null;
     status_product: "open" | "saled" | "canseled" | "reserved" | null;

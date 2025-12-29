@@ -6,7 +6,7 @@ import useModelMobile from "../../../hooks/useModelMobile";
 import { usePartNumber } from "../../../hooks/usePartNumber";
 import type { modelMobileType } from "../../../types/modelmobile.type";
 import type { Color } from "../../../types/color.type";
-import { FormDataType, StepIndex } from "../types";
+import type { FormDataType, StepIndex } from "../types";
 import { STEPS } from "../constants";
 
 export const useProductForm = () => {
@@ -23,7 +23,9 @@ export const useProductForm = () => {
     auction: false,
     guarantor: "",
     repaired: false,
+    registered: true,
     part_num: "",
+    charge_cicle: "0",
     status_product: "open",
     carton: "",
     grade: "",
@@ -183,6 +185,11 @@ export const useProductForm = () => {
       if (!formData.carton) newErrors.carton = "انتخاب کارتن الزامی است";
       if (formData.repaired && !formData.description) newErrors.description = "توضیحات الزامی است";
       if (formData.type_product === "used" && !formData.grade) newErrors.grade = "درجه محصول الزامی است";
+      
+      if (!formData.charge_cicle) newErrors.charge_cicle = "سایکل شارژ الزامی است";
+      else if (!/^\d+$/.test(formData.charge_cicle) || parseInt(formData.charge_cicle) < 0 || parseInt(formData.charge_cicle) > 999) {
+        newErrors.charge_cicle = "سایکل شارژ باید عددی بین 0 تا 999 باشد";
+      }
     } else if (step === 2) {
       if (!formData.price) newErrors.price = "قیمت همکار الزامی است";
       else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
@@ -220,6 +227,12 @@ export const useProductForm = () => {
     if (!formData.carton) newErrors.carton = "انتخاب کارتن الزامی است";
     if (formData.repaired && !formData.description) newErrors.description = "توضیحات الزامی است";
     if (formData.type_product === "used" && !formData.grade) newErrors.grade = "درجه محصول الزامی است";
+    
+    if (!formData.charge_cicle) newErrors.charge_cicle = "سایکل شارژ الزامی است";
+    else if (!/^\d+$/.test(formData.charge_cicle) || parseInt(formData.charge_cicle) < 0 || parseInt(formData.charge_cicle) > 999) {
+      newErrors.charge_cicle = "سایکل شارژ باید عددی بین 0 تا 999 باشد";
+    }
+
     if (!formData.price) newErrors.price = "قیمت همکار الزامی است";
     else if (!/^\d+$/.test(formData.price) || parseInt(formData.price) <= 0) newErrors.price = "قیمت باید عدد مثبت باشد";
     if (!formData.customer_price) newErrors.customer_price = "قیمت مشتری الزامی است";
@@ -265,6 +278,7 @@ export const useProductForm = () => {
         customer_price: formData.customer_price ? parseInt(formData.customer_price) : undefined,
         battry_health: formData.battry_health ? parseInt(formData.battry_health) : 0,
         guarantor: formData.guarantor ? parseInt(formData.guarantor) : 0,
+        charge_cicle: formData.charge_cicle ? parseInt(formData.charge_cicle) : 0,
         model_mobile: {
           id: formData.model_mobile,
           picture: []
@@ -282,7 +296,7 @@ export const useProductForm = () => {
         setFormData({
             description: "", description_appearance: "", technical_problem: "", price: "", customer_price: "",
             color: null, battry_health: "", battry_change: false, type_product: "new", auction: false,
-            guarantor: "", repaired: false, part_num: "", status_product: "open", carton: "", grade: "",
+            guarantor: "", repaired: false, registered: true, part_num: "", charge_cicle: "0", status_product: "open", carton: "", grade: "",
             model_mobile: null, pictures: [],
         });
         setSelectedModel(null);
