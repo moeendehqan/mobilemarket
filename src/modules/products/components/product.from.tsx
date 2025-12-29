@@ -108,6 +108,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const [colorSearch, setColorSearch] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const colorDropdownRef = useRef<HTMLDivElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const steps = [
     "برند و مدل و رنگ",
     "مشخصات فنی",
@@ -161,9 +163,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           newErrors.battry_health = "سلامت باتری الزامی است";
         } else if (!/^\d+$/.test(formData.battry_health) || parseInt(formData.battry_health) < 0 || parseInt(formData.battry_health) > 100) {
           newErrors.battry_health = "سلامت باتری باید عددی بین 0 تا 100 باشد";
-        }
-        if (formData.battry_change === null) {
-          newErrors.battry_change = "وضعیت تعویض باتری الزامی است";
         }
         if (!formData.part_num) newErrors.part_num = "پارت نامبر الزامی است";
       }
@@ -344,6 +343,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         (c.hex_code || "").toLowerCase().includes(colorSearch.toLowerCase())
       )
     : availableColors;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setFormData(prev => ({
+        ...prev,
+        pictures: [...prev.pictures, ...newFiles]
+      }));
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      pictures: prev.pictures.filter((_, i) => i !== index)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -673,7 +691,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               </LabelInput>
             )}
 
-            <LabelInput label="مانده گارانتی" error={errors.guarantor}>
+            <LabelInput label="مانده گارانتی" required error={errors.guarantor}>
               <input
                 type="number"
                 name="guarantor"
@@ -700,7 +718,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             </LabelInput>
 
             {selectedModel?.is_apple && (
-              <LabelInput label="پارت نامبر">
+              <LabelInput label="پارت نامبر" required error={errors.part_num as string}>
                 <select
                   name="part_num"
                   value={formData.part_num}
@@ -769,19 +787,77 @@ const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             </div>
 
             <LabelInput label="تصاویر محصول">
-              <input
-                type="file"
-                name="pictures"
-                multiple
-                accept="image/*"
-                onChange={handleChange}
-                className="w-full border-2 border-gray-200 focus:ring-blue-400 bg-gradient-to-br from-white to-blue-50/30 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-opacity-30 text-right transition-all duration-300 shadow-lg hover:shadow-xl backdrop-blur-sm font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              {formData.pictures.length > 0 && (
-                <div className="mt-3 text-sm text-gray-600">
-                  {formData.pictures.length} فایل انتخاب شده
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="flex-1 bg-blue-50 text-blue-700 border-2 border-blue-200 hover:bg-blue-100 font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <span>🖼️</span>
+                    انتخاب از گالری
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="flex-1 bg-purple-50 text-purple-700 border-2 border-purple-200 hover:bg-purple-100 font-bold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <span>📷</span>
+                    دوربین
+                  </button>
                 </div>
-              )}
+
+                <input
+                  type="file"
+                  ref={galleryInputRef}
+                  className="hidden"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                />
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                />
+
+                {formData.pictures.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+                    {formData.pictures.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`preview ${index}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 truncate px-2">
+                          {file.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {formData.pictures.length === 0 && (
+                  <div className="text-center text-gray-400 text-sm py-4 border-2 border-dashed border-gray-200 rounded-xl">
+                    هیچ تصویری انتخاب نشده است
+                  </div>
+                )}
+              </div>
             </LabelInput>
           </div>
           )}
