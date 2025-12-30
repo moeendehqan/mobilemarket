@@ -14,7 +14,8 @@ import DetailProductPage from '../modules/products/pages/detail-product.page';
 import OrderDetailPage from '../modules/order/pages/order-detail.page';
 import StatisticPage from '../modules/home/pages/statistic.page';
 import ProfilePage from '../modules/profile/pages/ProfilePage';
-import WalletPage from '../modules/wallet/pages/WalletPage';
+import WalletPage from '../modules/accounting/pages/WalletPage';
+import PaymentResultPage from '../modules/accounting/pages/PaymentResultPage';
 import ProductMePage from '../modules/products/pages/product-me.page';
 import AboutPage from '../modules/home/pages/about.page';
 
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: 'wallet',
         element: <WalletPage />,
+      },
+      {
+        path: 'accounting',
+        element: <PaymentResultPage />,
       },
       {
         path: 'stats',

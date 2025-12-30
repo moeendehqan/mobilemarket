@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { IoWallet } from 'react-icons/io5';
+import useGetBalance from "../hook/useGetBalance";
+import useCreatePay from "../hook/useCreatePay";
+
+
 
 const WalletPage = () => {
-  const balance = 5000000; // موجودی اولیه 5 میلیون تومان - این مقدار از بک‌اند دریافت می‌شود
+  const { data } = useGetBalance();
+  const { mutate: createPay, isPending } = useCreatePay();
+  
+  const balance = (Number(data?.bede) || 0) - (Number(data?.best) || 0);
+  
+
   const [inputAmount, setInputAmount] = useState('');
 
   const formatCurrency = (amount: number) => {
@@ -27,8 +36,22 @@ const WalletPage = () => {
   };
 
   const handleCharge = () => {
-    // اینجا می‌توانید منطق شارژ کیف پول را پیاده‌سازی کنید
-    alert('در حال اتصال به درگاه پرداخت...');
+    const amount = parseInt(inputAmount) || 0;
+    if (amount >= 100000) {
+      createPay(amount, {
+        onSuccess: (result) => {
+          console.log('Success:', result);
+          alert('شارژ با موفقیت انجام شد');
+          window.location.href = result; // Redirect to payment gateway
+        },
+        onError: (error) => {
+          console.error('Error:', error);
+          alert('خطا در اتصال به درگاه پرداخت');
+        }
+      });
+    } else {
+      alert('مبلغ باید حداقل 100,000 تومان باشد');
+    }
   };
 
   return (
@@ -106,9 +129,11 @@ const WalletPage = () => {
 
           <button
             onClick={handleCharge}
-            disabled={!inputAmount || parseInt(inputAmount) < 100000}
-            className="mt-8 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg transform hover:scale-[102%] transition-all duration-200 w-full">
-            <div className="flex items-center justify-center">شارژ کیف پول</div>
+            disabled={!inputAmount || parseInt(inputAmount) < 100000 || isPending}
+            className={`mt-8 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg transform hover:scale-[102%] transition-all duration-200 w-full ${isPending ? 'opacity-75 cursor-not-allowed' : ''}`}>
+            <div className="flex items-center justify-center">
+              {isPending ? 'در حال اتصال...' : 'شارژ کیف پول'}
+            </div>
           </button>
         </div>
       </div>

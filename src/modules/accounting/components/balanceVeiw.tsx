@@ -2,7 +2,8 @@
 
 
 import React from "react";
-import useGetBalance from "../hook/useGetBalanse";
+import useGetBalance from "../hook/useGetBalance";
+
 
 const BalanceView: React.FC = () => {
     const { data, isLoading } = useGetBalance();
