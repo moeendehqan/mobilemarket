@@ -50,7 +50,7 @@ const WalletPage = () => {
         }
       });
     } else {
-      alert('مبلغ باید حداقل 100,000 تومان باشد');
+      alert('مبلغ باید حداقل 100,000 ریال باشد');
     }
   };
 
@@ -72,7 +72,7 @@ const WalletPage = () => {
                 <div className="mr-3">
                   <p className="text-blue-100 text-sm">موجودی</p>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(balance)} <span className="text-sm font-normal">تومان</span>
+                    {formatCurrency(balance)} <span className="text-sm font-normal">ریال</span>
                   </p>
                 </div>
               </div>
@@ -87,7 +87,7 @@ const WalletPage = () => {
           {/* ورودی مبلغ دستی */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">مبلغ دلخواه (حداقل 100,000 تومان)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">مبلغ دلخواه (حداقل 100,000 ریال)</label>
               <div className="flex">
                 <input
                   type="text"
@@ -97,7 +97,7 @@ const WalletPage = () => {
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-1 focus:border-transparent outline-none text-right"
                 />
                 <span className="px-4 py-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-600">
-                  تومان
+                  ریال
                 </span>
               </div>
             </div>
@@ -115,7 +115,7 @@ const WalletPage = () => {
             </button>
 
             <div className="mx-6 text-center">
-              <p className="text-sm text-gray-600 mb-1">تغییرات 100,000 تومانی</p>
+              <p className="text-sm text-gray-600 mb-1">تغییرات 100,000 ریالی</p>
             </div>
 
             <button
