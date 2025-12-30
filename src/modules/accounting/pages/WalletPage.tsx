@@ -9,7 +9,7 @@ const WalletPage = () => {
   const { data } = useGetBalance();
   const { mutate: createPay, isPending } = useCreatePay();
   
-  const balance = (Number(data?.bede) || 0) - (Number(data?.best) || 0);
+  const balance = (Number(data?.best) || 0) - (Number(data?.bede) || 0);
   
 
   const [inputAmount, setInputAmount] = useState('');

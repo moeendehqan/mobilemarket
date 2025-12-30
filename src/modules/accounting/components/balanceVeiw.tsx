@@ -10,7 +10,7 @@ const BalanceView: React.FC = () => {
 
     if (isLoading) return <div className="h-6 w-24 bg-gray-100 animate-pulse rounded" />;
 
-    const balance = (Number(data?.bede) || 0) - (Number(data?.best) || 0);
+    const balance = (Number(data?.best) || 0) - (Number(data?.bede) || 0);
 
     return (
         <span className={`font-bold text-lg ${balance > 0 ? "text-rose-600" : "text-emerald-600"}`} dir="ltr">
